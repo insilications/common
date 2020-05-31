@@ -12,6 +12,12 @@ SHELL   = /bin/bash
 PKGS    = $(shell cat $(PACKAGES_FILE))
 PKGS_LOCAL = $(sort $(filter ${PKGS},$(subst packages/,,$(wildcard packages/*))))
 PKGS_ORPHANED = $(sort $(filter-out common ${PKGS},$(subst packages/,,$(wildcard packages/*))))
+PGS_DOWNSTREAM = $(shell echo packages/*)
+PKGS_ALL = $(sort $(filter-out common ${PGS_DOWNSTREAM},$(subst packages/,,$(wildcard packages/*))))
+#PKGS_ALL = $(sort $(shell echo packages/*))
+#PKGS_ALL_TMP = $(sort $(subst packages/,,$(wildcard packages/*) $(shell echo packages/*)))
+#PKGS_ALL = $(filter-out common,$(PKGS_ALL_TMP))
+
 
 proj_PKGS = $(addprefix proj_,$(PROJ_PKGS))
 clone_PKGS = $(addprefix clone_,$(PKGS))
@@ -68,18 +74,13 @@ ${PULL_PKGS}:
 	if [ ! -d "$$p/.git" ]; then echo "Nothing to pull for $$p - $$p/.git missing"; exit 0; fi; \
 	cd "$$p" ; \
 	if git remote | grep origin >/dev/null 2>&1; then \
-		case "$$p" in \
-			("projects/"*) BRANCH=master ;; \
-			("packages/"*) BRANCH=main ;; \
-			(*) BRANCH=master ;; \
-		esac; \
-		O=$$(git rev-parse origin/"$$BRANCH" 2>/dev/null); \
+		O=$$(git rev-parse origin/master 2>/dev/null); \
 		git fetch --tags origin >/dev/null 2>&1; \
-		N=$$(git rev-parse origin/"$$BRANCH"); \
+		N=$$(git rev-parse origin/master); \
 		if [ "$$O" != "$$N" ]; then \
 			echo "Updating: $$p"; \
-			if ! git merge --ff-only origin/"$$BRANCH" 2>/dev/null; then \
-				echo "$$p: Cannot fast-forward $$(git rev-parse --abbrev-ref HEAD) to origin/$$BRANCH" ; \
+			if ! git merge --ff-only origin/master 2>/dev/null; then \
+				echo "$$p: Cannot fast-forward $$(git rev-parse --abbrev-ref HEAD) to origin/master" ; \
 			fi ; \
 			git --no-pager log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit $$O..$$N; echo; \
 		fi ; \
@@ -125,7 +126,7 @@ ifeq (pull,$(filter pull,${MAKECMDGOALS}))
 endif
 pull: ${PULL_PKGS}
 
-#help clean-pkgs-dir: For packages that are no longer present in the distro,
+#help clean-pkgs-dir: For packages that are no longer present in the upstream distro,
 #help removes the associated package repos from the ./packages tree
 clean-pkgs-dir: $(PACKAGES_FILE)
 	@for p in ${PKGS_ORPHANED}; do \
@@ -134,11 +135,11 @@ clean-pkgs-dir: $(PACKAGES_FILE)
 	done
 	@echo "packages directory cleaned";
 
-clean_PKGS = $(addprefix clean_,$(PKGS_LOCAL))
+clean_PKGS = $(addprefix clean_,$(PKGS_ALL))
 #help clean: Run 'make clean' for every package.
 clean: $(clean_PKGS)
 
-proper_PKGS = $(addprefix proper_,$(PKGS_LOCAL))
+proper_PKGS = $(addprefix proper_,$(PKGS_ALL))
 #help proper: Run 'make proper' for every package, and purge the local
 #help repo and image.
 proper: $(proper_PKGS)
@@ -159,24 +160,24 @@ $(proper_PKGS):
 
 #help status: Runs git status for all package repos, thus displaying untracked
 #help and unstaged files in addition to staged files.
-status: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_LOCAL))
-	@for p in projects/common $(addprefix packages/,$(PKGS_LOCAL)); do \
+status: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_ALL))
+	@for p in projects/common $(addprefix packages/,$(PKGS_ALL)); do \
 	if [ -d "$$p/.git" ] &&  [ -n "$$(git -C $$p status -uno --porcelain)" ]; then echo "Uncommitted changes in $$p:"; git -C "$$p" status --short; fi ;\
 	done
 
-#help diff: Runs git diff for all package repos and displays the diffstat using
-#help the --stat flag.
+#help diff: Runs git diff for all package repos and displays the output using
+#help diffstat. Requires that diffstat is installed.
 diff: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_LOCAL))
 	@for p in projects/common $(addprefix packages/,$(PKGS_LOCAL)); do \
-		(cd $$p; git status --porcelain | grep -vq '^?? ' && (echo "Uncommitted changes in: $$p"; git diff --stat); :) ;\
+		(cd $$p; git status --porcelain | grep -vq '^?? ' && (echo "Uncommitted changes in: $$p"; git diff | diffstat -p1); :) ;\
 	done
 
-#help log: Run git log origin/main..HEAD for all package repos, thus
+#help log: Run git log origin/master..HEAD for all package repos, thus
 #help displaying any committed but unpushed changes.
-log: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_LOCAL))
-	@for p in projects/common $(addprefix packages/,$(PKGS_LOCAL)); do \
-		( cd $$p; if [ -n "$$(git rev-list origin/main..HEAD)" ] ; then \
-		echo $$p ; git --no-pager log --pretty="format:%s" origin/main..HEAD ; echo ; echo;\
+log: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_ALL))
+	@for p in projects/common $(addprefix packages/,$(PKGS_ALL)); do \
+		( cd $$p; if [ "$$(git rev-parse --verify HEAD)" != "$$(git rev-parse --verify origin/master)" ] ; then \
+		echo $$p ; git --no-pager log --pretty="format:%s" origin/master..HEAD ; echo ; echo;\
 		fi ; ) \
 	done
 
@@ -216,7 +217,7 @@ autospecnew: preautospecnew-checks localreponotice
 		mkdir -p $(TOPLVL)/packages/$(NAME); \
 		( \
 			cd $(TOPLVL)/packages/$(NAME); \
-			git init -b main; \
+			git init; \
 			git remote add origin $(PKG_BASE_URL)/$(NAME); \
 			$(call gitoliteurl,packages/$(NAME)); \
 			$(call subjectprefix,$(NAME)); \
@@ -231,6 +232,8 @@ autospecnew: preautospecnew-checks localreponotice
 			--mock-config $(MOCK_CONFIG_VAL) \
 			--mock-opts="$(MOCK_OPTS)" \
 			$${SETVERSION:+ --version $${SETVERSION}} \
+			$${FROM_GIT:+ --download_from_git $${FROM_GIT}} \
+			$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
 			${NON_INTERACTIVE} ${SKIP_GIT} ${CLEANUP} \
 			$(URL); \
 		if [ $$? -eq 0 ]; then \
@@ -267,7 +270,7 @@ autospecnewgo: preautospecnew-checks localreponotice
 		mkdir -p $(TOPLVL)/packages/$(NAME); \
 		( \
 			cd $(TOPLVL)/packages/$(NAME); \
-			git init -b main; \
+			git init; \
 			git remote add origin $(PKG_BASE_URL)/$(NAME); \
 			$(call gitoliteurl,packages/$(NAME)); \
 			$(call subjectprefix,$(NAME)); \
