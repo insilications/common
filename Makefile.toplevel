@@ -12,6 +12,12 @@ SHELL   = /bin/bash
 PKGS    = $(shell cat $(PACKAGES_FILE))
 PKGS_LOCAL = $(sort $(filter ${PKGS},$(subst packages/,,$(wildcard packages/*))))
 PKGS_ORPHANED = $(sort $(filter-out common ${PKGS},$(subst packages/,,$(wildcard packages/*))))
+PGS_DOWNSTREAM = $(shell echo packages/*)
+PKGS_ALL = $(sort $(filter-out common ${PGS_DOWNSTREAM},$(subst packages/,,$(wildcard packages/*))))
+#PKGS_ALL = $(sort $(shell echo packages/*))
+#PKGS_ALL_TMP = $(sort $(subst packages/,,$(wildcard packages/*) $(shell echo packages/*)))
+#PKGS_ALL = $(filter-out common,$(PKGS_ALL_TMP))
+
 
 proj_PKGS = $(addprefix proj_,$(PROJ_PKGS))
 clone_PKGS = $(addprefix clone_,$(PKGS))
@@ -120,7 +126,7 @@ ifeq (pull,$(filter pull,${MAKECMDGOALS}))
 endif
 pull: ${PULL_PKGS}
 
-#help clean-pkgs-dir: For packages that are no longer present in the distro,
+#help clean-pkgs-dir: For packages that are no longer present in the upstream distro,
 #help removes the associated package repos from the ./packages tree
 clean-pkgs-dir: $(PACKAGES_FILE)
 	@for p in ${PKGS_ORPHANED}; do \
@@ -129,11 +135,11 @@ clean-pkgs-dir: $(PACKAGES_FILE)
 	done
 	@echo "packages directory cleaned";
 
-clean_PKGS = $(addprefix clean_,$(PKGS_LOCAL))
+clean_PKGS = $(addprefix clean_,$(PKGS_ALL))
 #help clean: Run 'make clean' for every package.
 clean: $(clean_PKGS)
 
-proper_PKGS = $(addprefix proper_,$(PKGS_LOCAL))
+proper_PKGS = $(addprefix proper_,$(PKGS_ALL))
 #help proper: Run 'make proper' for every package, and purge the local
 #help repo and image.
 proper: $(proper_PKGS)
@@ -154,8 +160,8 @@ $(proper_PKGS):
 
 #help status: Runs git status for all package repos, thus displaying untracked
 #help and unstaged files in addition to staged files.
-status: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_LOCAL))
-	@for p in projects/common $(addprefix packages/,$(PKGS_LOCAL)); do \
+status: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_ALL))
+	@for p in projects/common $(addprefix packages/,$(PKGS_ALL)); do \
 	if [ -d "$$p/.git" ] &&  [ -n "$$(git -C $$p status -uno --porcelain)" ]; then echo "Uncommitted changes in $$p:"; git -C "$$p" status --short; fi ;\
 	done
 
@@ -168,8 +174,8 @@ diff: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_LOCAL))
 
 #help log: Run git log origin/master..HEAD for all package repos, thus
 #help displaying any committed but unpushed changes.
-log: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_LOCAL))
-	@for p in projects/common $(addprefix packages/,$(PKGS_LOCAL)); do \
+log: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_ALL))
+	@for p in projects/common $(addprefix packages/,$(PKGS_ALL)); do \
 		( cd $$p; if [ "$$(git rev-parse --verify HEAD)" != "$$(git rev-parse --verify origin/master)" ] ; then \
 		echo $$p ; git --no-pager log --pretty="format:%s" origin/master..HEAD ; echo ; echo;\
 		fi ; ) \
@@ -226,6 +232,8 @@ autospecnew: preautospecnew-checks localreponotice
 			--mock-config $(MOCK_CONFIG_VAL) \
 			--mock-opts="$(MOCK_OPTS)" \
 			$${SETVERSION:+ --version $${SETVERSION}} \
+			$${FROM_GIT:+ --download_from_git $${FROM_GIT}} \
+			$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
 			${NON_INTERACTIVE} ${SKIP_GIT} ${CLEANUP} \
 			$(URL); \
 		if [ $$? -eq 0 ]; then \
