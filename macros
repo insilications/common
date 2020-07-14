@@ -199,6 +199,11 @@
   %{make_install_command} %* \
   %{make_install_common} \
   find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  
+%make_install_special() \
+  %{make_install_command} %* \
+  %{make_install_common} \
+  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
 
 %make_install_avx2() \
   %{make_install_command} %* \
