@@ -154,7 +154,7 @@ localrepodisable: $(TOPLVL)/repo
 
 # Runs createrepo_c for the local RPM repo
 localrepocreate: $(TOPLVL)/repo
-	cd $< && flock repo.lock createrepo_c .
+	cd $< && flock repo.lock createrepo_c --workers 16 .
 
 # Remove all RPMs from the local RPM repo
 localrepoclean: $(TOPLVL)/repo
