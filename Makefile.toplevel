@@ -62,6 +62,7 @@ $(clone_PKGS): $(PACKAGES_FILE) packages/common/Makefile.common
 	cd packages/$$pkg; \
 	$(call gitoliteurl,packages/$$pkg); \
 	$(call subjectprefix,$$pkg); \
+	git checkout -b patched; \
 	)
 
 #help pull: Performs a git pull --rebase for each package repo, avoiding the creation
@@ -229,12 +230,14 @@ autospecnew: preautospecnew-checks localreponotice
 			--config "$(AUTOSPEC_CONF)" \
 			--name $(NAME) \
 			--archives $(ARCHIVES) \
+			--archives_from_git $(ARCHIVES_GIT) \
 			--mock-config $(MOCK_CONFIG_VAL) \
 			--mock-opts="$(MOCK_OPTS)" \
 			$${SETVERSION:+ --version $${SETVERSION}} \
 			$${FROM_GIT:+ --download_from_git} \
 			$${REDO_GIT:+ --redownload_from_git} \
 			$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
+			$${REDO_AR:+ --redownload_archive} \
 			${NON_INTERACTIVE} ${SKIP_GIT} ${CLEANUP} \
 			$(URL); \
 		if [ $$? -eq 0 ]; then \
