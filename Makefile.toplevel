@@ -238,6 +238,7 @@ autospecnew: preautospecnew-checks localreponotice
 			$${REDO_GIT:+ --redownload_from_git} \
 			$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
 			$${REDO_AR:+ --redownload_archive} \
+			$${DISABLE_SUBMODULES:+ --disable_submodule} \
 			${NON_INTERACTIVE} ${SKIP_GIT} ${CLEANUP} \
 			$(URL); \
 		if [ $$? -eq 0 ]; then \
