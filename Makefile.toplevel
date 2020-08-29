@@ -234,11 +234,11 @@ autospecnew: preautospecnew-checks localreponotice
 			--mock-config $(MOCK_CONFIG_VAL) \
 			--mock-opts="$(MOCK_OPTS)" \
 			$${SETVERSION:+ --version $${SETVERSION}} \
-			$${FROM_GIT:+ --download_from_git} \
+			$${FROM_GIT:+ --download_from_git $${FROM_GIT}} \
 			$${REDO_GIT:+ --redownload_from_git} \
 			$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
 			$${REDO_AR:+ --redownload_archive} \
-			$${DISABLE_SUBMODULES:+ --disable_submodule} \
+			$${DISABLE_SM:+ --disable_submodule $${DISABLE_SM}} \
 			${NON_INTERACTIVE} ${SKIP_GIT} ${CLEANUP} \
 			$(URL); \
 		if [ $$? -eq 0 ]; then \
