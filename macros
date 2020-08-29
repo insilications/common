@@ -34,10 +34,25 @@
 # avoid aborting with packages without debugfiles.list
 %_empty_manifest_terminate_build 0
 
+%_fix_broken_configure_for_lto \
+  for file in $(find . -type f -name configure -print); do \
+    %{__sed} -r --in-place=.backup 's/^char \\(\\*f\\) \\(\\) = /__attribute__ ((used)) char (*f) () = /g' $file; \
+    diff -u $file.backup $file && mv $file.backup $file \
+    %{__sed} -r --in-place=.backup 's/^char \\(\\*f\\) \\(\\);/__attribute__ ((used)) char (*f) ();/g' $file; \
+    diff -u $file.backup $file && mv $file.backup $file \
+    %{__sed} -r --in-place=.backup 's/^char \\$2 \\(\\);/__attribute__ ((used)) char \\$2 ();/g' $file; \
+    diff -u $file.backup $file && mv $file.backup $file \
+    %{__sed} --in-place=.backup '1{$!N;$!N};$!N;s/int x = 1;\\nint y = 0;\\nint z;\\nint nan;/volatile int x = 1; volatile int y = 0; volatile int z, nan;/;P;D' $file; \
+    diff -u $file.backup $file && mv $file.backup $file \
+    %{__sed} --in-place=.backup 's#^lt_cv_sys_global_symbol_to_cdecl=.*#lt_cv_sys_global_symbol_to_cdecl="sed -n -e '"'"'s/^T .* \\\\(.*\\\\)$/extern int \\\\1();/p'"'"' -e '"'"'s/^$symcode* .* \\\\(.*\\\\)$/extern char \\\\1;/p'"'"'"#' $file; \
+    diff -u $file.backup $file && mv $file.backup $file \
+  done
+
 #==============================================================================
 # ---- configure and makeinstall.
 #
 %configure \
+  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   CFLAGS="${CFLAGS:-%optflags} -fPIC" ; export CFLAGS ; \
   LDFLAGS="$LDFLAGS -Wl,--build-id=sha1" ; export LDFLAGS ; \
   ./configure --build=%{_build} --host=%{_host} \\\
@@ -61,6 +76,7 @@
 %reconfigure \
   CFLAGS="${CFLAGS:-%optflags} -fPIC" ; export CFLAGS ; \
   autoreconf -v --install --force || exit 1 \
+  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   ./configure --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
 	--program-prefix=%{?_program_prefix} \\\
@@ -97,6 +113,7 @@
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} || : \
+  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   ./configure --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
 	--program-prefix=%{?_program_prefix} \\\
@@ -307,7 +324,7 @@
     /usr/lib/rpm/clr/brp-strip-static-archive %{__strip} \
     /usr/lib/rpm/clr/brp-strip-comment-note %{__strip} %{__objdump} \
     /usr/lib/rpm/clr/brp-python-bytecompile "" "%{?_python_bytecompile_errors_terminate_build}" "%{?_python_bytecompile_extra}" \
-    /usr/lib/rpm/clr/brp-python-hardlink
+    %{?py_reproducible_pyc_path:%{?__brp_fix_pyc_reproducibility} "%{py_reproducible_pyc_path}"} \
     find %{buildroot} -print0 | xargs -0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || : \
     %{!?__jar_repack:/usr/lib/rpm/clr/brp-java-repack-jars} \
 %{nil}
@@ -433,6 +450,10 @@ rm -rf %{?buildroot:%{buildroot}} \
 %_python_bytecompile_errors_terminate_build 1
 ## Should python bytecompilation compile outside python specific directories?
 %_python_bytecompile_extra 0
+##
+%__brp_fix_pyc_reproducibility /usr/lib/rpm/clr/brp-fix-pyc-reproducibility
+#%py_reproducible_pyc_path 1
+#
 
 #
 # Should unpackaged files in a build root terminate a build?
