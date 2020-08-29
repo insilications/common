@@ -306,7 +306,8 @@
     %{!?__debug_package:/usr/lib/rpm/clr/brp-strip %{__strip}} \
     /usr/lib/rpm/clr/brp-strip-static-archive %{__strip} \
     /usr/lib/rpm/clr/brp-strip-comment-note %{__strip} %{__objdump} \
-    /usr/lib/rpm/clr/brp-python-bytecompile \
+    /usr/lib/rpm/clr/brp-python-bytecompile "" "%{?_python_bytecompile_errors_terminate_build}" "%{?_python_bytecompile_extra}" \
+    /usr/lib/rpm/clr/brp-python-hardlink
     find %{buildroot} -print0 | xargs -0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || : \
     %{!?__jar_repack:/usr/lib/rpm/clr/brp-java-repack-jars} \
 %{nil}
@@ -426,6 +427,12 @@ rm -rf %{?buildroot:%{buildroot}} \
 #
 # Should missing buildids terminate a build?
 %_missing_build_ids_terminate_build    0
+
+#
+## Should python bytecompilation errors terminate a build?
+%_python_bytecompile_errors_terminate_build 1
+## Should python bytecompilation compile outside python specific directories?
+%_python_bytecompile_extra 0
 
 #
 # Should unpackaged files in a build root terminate a build?

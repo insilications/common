@@ -87,7 +87,7 @@ prebuild-checks:
 #help are mutlple tar.gz files for a package, make will do make sources,
 #help which creates a src.rpm file from the spec file.
 #help Use MOCK_OPTS environment varible to pass down arbitrary mock options.
-build: prebuild-checks configemail $(SPECFILE) upstream $(SRPMFILE)
+build: prebuild-checks $(SPECFILE) upstream $(SRPMFILE)
 	$(MOCK) $(SRPMFILE) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME)
 	$(MAKE) link-new-rpms PKG_REPO_DIR="."
 	@perl $(TOPLVL)/projects/common/logcheck.pl results/build.log
