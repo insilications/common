@@ -25,13 +25,36 @@
 %_fmoddir		%{_libdir}/gfortran/modules
 %_enable_debug_packages 1
 
+# creates the build-id only for debug elf objects
+%_build_id_links alldebug
+
 #       Default fuzz level for %patch in spec file.
 %_default_patch_fuzz    2
+
+# avoid aborting with packages without debugfiles.list
+%_empty_manifest_terminate_build 0
+
+%_fix_broken_configure_for_lto \
+  for file in $(find . -type f -name configure -print); do \
+    %{__sed} -r --in-place=.backup 's/^char \\(\\*f\\) \\(\\) = /__attribute__ ((used)) char (*f) () = /g' $file; \
+    diff -u $file.backup $file && mv $file.backup $file \
+    %{__sed} -r --in-place=.backup 's/^char \\(\\*f\\) \\(\\);/__attribute__ ((used)) char (*f) ();/g' $file; \
+    diff -u $file.backup $file && mv $file.backup $file \
+    %{__sed} -r --in-place=.backup 's/^char \\$2 \\(\\);/__attribute__ ((used)) char \\$2 ();/g' $file; \
+    diff -u $file.backup $file && mv $file.backup $file \
+    %{__sed} --in-place=.backup '1{$!N;$!N};$!N;s/int x = 1;\\nint y = 0;\\nint z;\\nint nan;/volatile int x = 1; volatile int y = 0; volatile int z, nan;/;P;D' $file; \
+    diff -u $file.backup $file && mv $file.backup $file \
+    %{__sed} --in-place=.backup 's#^lt_cv_sys_global_symbol_to_cdecl=.*#lt_cv_sys_global_symbol_to_cdecl="sed -n -e '"'"'s/^T .* \\\\(.*\\\\)$/extern int \\\\1();/p'"'"' -e '"'"'s/^$symcode* .* \\\\(.*\\\\)$/extern char \\\\1;/p'"'"'"#' $file; \
+    diff -u $file.backup $file && mv $file.backup $file \
+  done
 
 #==============================================================================
 # ---- configure and makeinstall.
 #
 %configure \
+  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
+  CFLAGS="${CFLAGS:-%optflags} -fPIC" ; export CFLAGS ; \
+  LDFLAGS="$LDFLAGS -Wl,--build-id=sha1" ; export LDFLAGS ; \
   ./configure --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
 	--program-prefix=%{?_program_prefix} \\\
@@ -51,7 +74,9 @@
 
 
 %reconfigure \
+  CFLAGS="${CFLAGS:-%optflags} -fPIC" ; export CFLAGS ; \
   autoreconf -v --install --force || exit 1 \
+  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   ./configure --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
 	--program-prefix=%{?_program_prefix} \\\
@@ -70,6 +95,7 @@
 	--infodir=%{_infodir}
 
 %autogen \
+  CFLAGS="${CFLAGS:-%optflags} -fPIC" ; export CFLAGS ; \
   NOCONFIGURE="noconfigure"; export NOCONFIGURE ; \
   sh ./autogen.sh --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
@@ -87,6 +113,7 @@
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} || : \
+  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   ./configure --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
 	--program-prefix=%{?_program_prefix} \\\
@@ -106,7 +133,8 @@
 
 
 %waf \
-  FFLAGS="${FFLAGS: -I%_fmoddir}" ; export FFLAGS ; \
+  CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
+  FFLAGS="${FFLAGS:-%optflags -I%_fmoddir}" ; export FFLAGS ; \
   ./waf configure \\\
 	--prefix=%{_prefix} \\\
 	--exec-prefix=%{_exec_prefix} \\\
@@ -191,8 +219,7 @@
   [ -d %{?buildroot:%{buildroot}}/usr/sbin ] && rmdir %{?buildroot:%{buildroot}}/usr/sbin || : \
   [ -d %{?buildroot:%{buildroot}}/sbin ] && rmdir %{?buildroot:%{buildroot}}/sbin || : \
   [ -d %{?buildroot:%{buildroot}}/bin ] && rmdir %{?buildroot:%{buildroot}}/bin || : \
-  chmod a+x %{?buildroot:%{buildroot}}/usr/lib64/* || : \
-  chmod a+x %{?buildroot:%{buildroot}}/lib/* || : \
+  chmod a+x %{?buildroot:%{buildroot}}{/usr,}/lib{,32,64}/*.so* || : \
   %{!?keepstatic:find %{?buildroot:%{buildroot}} -regex ".*\\.la$" | xargs rm -f --}   \
   %{!?keepstatic:find %{?buildroot:%{buildroot}} -regex ".*\\.a$" | xargs rm -f --}
 
@@ -217,6 +244,16 @@
   %{make_install_common} \
   /usr/bin/clr-avx2-move.pl haswell/avx512_1 .avx512 %{?buildroot:%{buildroot}}/ \
   find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+
+%make_install_openmpi() \
+  %{make_install_command} %* \
+  rm -f %{?buildroot:%{buildroot}}$MPI_ROOT/share/info/dir \
+  rm -f %{?buildroot:%{buildroot}}$MPI_LIB/perl5/*/*/perllocal.pod \
+  find %{?buildroot:%{buildroot}}$MPI_ROOT -regex ".*\\.la$" | xargs rm -f -- \
+  find %{?buildroot:%{buildroot}}$MPI_ROOT -regex ".*\\.pyo$" | xargs rm -f -- \
+  %{!?keepstatic:find %{?buildroot:%{buildroot}}$MPI_ROOT -regex ".*\\.a$" | xargs rm -f --} \
+  chmod a+x %{?buildroot:%{buildroot}}$MPI_BIN/* || : \
+  chmod a+x %{?buildroot:%{buildroot}}$MPI_LIB/* || :
 
 %make_install32() \
   %{__make} \\\
@@ -286,7 +323,8 @@
     %{!?__debug_package:/usr/lib/rpm/clr/brp-strip %{__strip}} \
     /usr/lib/rpm/clr/brp-strip-static-archive %{__strip} \
     /usr/lib/rpm/clr/brp-strip-comment-note %{__strip} %{__objdump} \
-    /usr/lib/rpm/clr/brp-python-bytecompile \
+    /usr/lib/rpm/clr/brp-python-bytecompile "" "%{?_python_bytecompile_errors_terminate_build}" "%{?_python_bytecompile_extra}" \
+    %{?py_reproducible_pyc_path:%{?__brp_fix_pyc_reproducibility} "%{py_reproducible_pyc_path}"} \
     find %{buildroot} -print0 | xargs -0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || : \
     %{!?__jar_repack:/usr/lib/rpm/clr/brp-java-repack-jars} \
 %{nil}
@@ -294,7 +332,7 @@
 #    /usr/lib/rpm/clr/brp-implant-ident-static
 
 %__spec_install_post\
-    rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir \
+    %{!?keepinfodir:rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir} \
     test -z "`find  %{?buildroot:%{buildroot}}  -path 'etc/*' ! -type d`" \
     rm -rf %{?buildroot:%{buildroot}}/etc/* \
     rm -rf %{?buildroot:%{buildroot}}/usr/share/factory/* \
@@ -308,7 +346,7 @@
         xargs -0rtn1 $RPM_XARGS_PFLAG python /usr/share/clr-avx-tools/avxjudge.py -q -5 \
     (find %{buildroot} -name "*.so.avx2" -print0; find %{buildroot}/usr/lib64/haswell \! -path "/usr/lib64/haswell/avx512_1/*" -name "*.so*" -print0) | \\\
         xargs -0rtn1 $RPM_XARGS_PFLAG python /usr/share/clr-avx-tools/avxjudge.py -q -2 \
-    find %{buildroot}/usr/lib64/ -maxdepth 1 -name '*.so*' -type f -print0 | \\\
+    find %{buildroot}/usr/lib32/ %{buildroot}/usr/lib64/ -maxdepth 2 -name '*.so*' -type f -print0 | \\\
        xargs -0rtn1 $RPM_XARGS_PFLAG /usr/lib/rpm/clr/brp-create-abi | sort -u > abifiles.list\
     %{?__debug_package:%{__debug_install_post}}\
     [ -d  %{?buildroot:%{buildroot}}/usr/lib/debug ] && mkdir -p  %{?buildroot:%{buildroot}}/usr/share || : \
@@ -364,7 +402,9 @@ LANG=en_US.UTF-8\
 export LANG\
 unset DISPLAY\
 unset PYTHONOPTIMIZE \
-FFLAGS="${FFLAGS: -I%_fmoddir}" ; export FFLAGS ; \
+CFLAGS="%optflags" ; export CFLAGS ; \
+CXXFLAGS="%optflags" ; export CXXFLAGS ; \
+FFLAGS="${FFLAGS:-%optflags -I%_fmoddir}" ; export FFLAGS ; \
 LD_AS_NEEDED=1; export LD_AS_NEEDED ; \
 PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig; export PKG_CONFIG_LIBDIR ; \
 PATH="/usr/lib64/ccache/bin:/usr/local/bin:/usr/bin"; export PATH ; \
@@ -403,7 +443,17 @@ rm -rf %{?buildroot:%{buildroot}} \
 %_missing_doc_files_terminate_build    1
 #
 # Should missing buildids terminate a build?
-%_missing_build_ids_terminate_build    1
+%_missing_build_ids_terminate_build    0
+
+#
+## Should python bytecompilation errors terminate a build?
+%_python_bytecompile_errors_terminate_build 1
+## Should python bytecompilation compile outside python specific directories?
+%_python_bytecompile_extra 0
+##
+%__brp_fix_pyc_reproducibility /usr/lib/rpm/clr/brp-fix-pyc-reproducibility
+#%py_reproducible_pyc_path 1
+#
 
 #
 # Should unpackaged files in a build root terminate a build?
@@ -593,4 +643,4 @@ install -D -m 644 %1-16.png $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/16x16/apps/
 #               "w7.lzdio"      lzma-alone level 7, lzma's default
 #
 %_source_payload       w0.gzdio
-%_binary_payload       w6.gzdio 
+%_binary_payload       w6.gzdio
