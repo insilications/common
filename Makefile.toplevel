@@ -239,6 +239,7 @@ autospecnew: preautospecnew-checks localreponotice
 			$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
 			$${REDO_AR:+ --redownload_archive} \
 			$${DISABLE_SM:+ --disable_submodule $${DISABLE_SM}} \
+			$${FORCE_FC:+ --force_fullclone $${FORCE_FC}} \
 			${NON_INTERACTIVE} ${SKIP_GIT} ${CLEANUP} \
 			$(URL); \
 		if [ $$? -eq 0 ]; then \
