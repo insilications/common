@@ -190,6 +190,7 @@ autospec: preautospec-checks pullrebase localreponotice clean-old-content
 		$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
 		$${REDO_AR:+ --redownload_archive} \
 		$${DISABLE_SM:+ --disable_submodule $${DISABLE_SM}} \
+		$${FORCE_FC:+ --force_fullclone $${FORCE_FC}} \
 		$(firstword $(NEWURL) $(URL));
 	$(MAKE) link-new-rpms PKG_REPO_DIR="."
 	@$(MAKE) spdxcheck
