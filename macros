@@ -329,6 +329,7 @@
     /usr/lib/rpm/clr/brp-strip-static-archive %{__strip} \
     /usr/lib/rpm/clr/brp-strip-comment-note %{__strip} %{__objdump} \
     /usr/lib/rpm/clr/brp-python-bytecompile "" "%{?_python_bytecompile_errors_terminate_build}" "%{?_python_bytecompile_extra}" \
+    /usr/lib/rpm/clr/brp-python-hardlink \
     %{?py_reproducible_pyc_path:%{?__brp_fix_pyc_reproducibility} "%{py_reproducible_pyc_path}"} \
     find %{buildroot} -print0 | xargs -0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || : \
     %{!?__jar_repack:/usr/lib/rpm/clr/brp-java-repack-jars} \
