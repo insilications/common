@@ -70,8 +70,8 @@
 	--localstatedir=%{_localstatedir} \\\
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
-	--infodir=%{_infodir}
-
+	--infodir=%{_infodir} \\\
+	--disable-maintainer-mode
 
 %reconfigure \
   CFLAGS="${CFLAGS:-%optflags} -fPIC" ; export CFLAGS ; \
@@ -92,7 +92,8 @@
 	--localstatedir=%{_localstatedir} \\\
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
-	--infodir=%{_infodir}
+	--infodir=%{_infodir} \\\
+	--disable-maintainer-mode
 
 %autogen \
   CFLAGS="${CFLAGS:-%optflags} -fPIC" ; export CFLAGS ; \
@@ -112,7 +113,8 @@
 	--localstatedir=%{_localstatedir} \\\
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
-	--infodir=%{_infodir} || : \
+	--infodir=%{_infodir} \\\
+	--disable-maintainer-mode || : \
   [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   ./configure --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
@@ -129,7 +131,8 @@
 	--localstatedir=%{_localstatedir} \\\
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
-	--infodir=%{_infodir}
+	--infodir=%{_infodir} \\\
+	--disable-maintainer-mode
 
 
 %waf \
