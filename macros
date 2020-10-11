@@ -53,8 +53,6 @@
 #
 %configure \
   [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
-  CFLAGS="${CFLAGS:-%optflags} -fPIC" ; export CFLAGS ; \
-  LDFLAGS="$LDFLAGS -Wl,--build-id=sha1" ; export LDFLAGS ; \
   ./configure --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
 	--program-prefix=%{?_program_prefix} \\\
@@ -74,7 +72,6 @@
 	--disable-maintainer-mode
 
 %reconfigure \
-  CFLAGS="${CFLAGS:-%optflags} -fPIC" ; export CFLAGS ; \
   autoreconf -v --install --force || exit 1 \
   [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   ./configure --build=%{_build} --host=%{_host} \\\
@@ -96,7 +93,6 @@
 	--disable-maintainer-mode
 
 %autogen \
-  CFLAGS="${CFLAGS:-%optflags} -fPIC" ; export CFLAGS ; \
   NOCONFIGURE="noconfigure"; export NOCONFIGURE ; \
   sh ./autogen.sh --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
@@ -136,8 +132,6 @@
 
 
 %waf \
-  CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
-  FFLAGS="${FFLAGS:-%optflags -I%_fmoddir}" ; export FFLAGS ; \
   ./waf configure \\\
 	--prefix=%{_prefix} \\\
 	--exec-prefix=%{_exec_prefix} \\\
@@ -411,9 +405,6 @@ LANG=en_US.UTF-8\
 export LANG\
 unset DISPLAY\
 unset PYTHONOPTIMIZE \
-CFLAGS="%optflags" ; export CFLAGS ; \
-CXXFLAGS="%optflags" ; export CXXFLAGS ; \
-FFLAGS="${FFLAGS:-%optflags -I%_fmoddir}" ; export FFLAGS ; \
 LD_AS_NEEDED=1; export LD_AS_NEEDED ; \
 PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig; export PKG_CONFIG_LIBDIR ; \
 PATH="/usr/lib64/ccache/bin:/usr/local/bin:/usr/bin"; export PATH ; \
