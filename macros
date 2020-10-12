@@ -68,8 +68,7 @@
 	--localstatedir=%{_localstatedir} \\\
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
-	--infodir=%{_infodir} \\\
-	--disable-maintainer-mode
+	--infodir=%{_infodir}
 
 %reconfigure \
   autoreconf -v --install --force || exit 1 \
