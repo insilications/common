@@ -551,6 +551,19 @@ install-local:
 	done
 	@$(MAKE) -s install-debuginfo-local
 
+#help t-local: Install locally built RPMs to a test filesystem.
+install-t:
+	$(eval NO_DEBUGINFO_RPMS := $(filter-out ${DEBUGINFO_RPM},${RPMS}))
+	$(eval NO_LIB32_RPM := $(filter-out ${LIB32_RPM},${NO_DEBUGINFO_RPMS}))
+	$(eval NO_DEV32_RPM := $(filter-out ${DEV32_RPM},${NO_LIB32_RPM}))
+	$(eval NO_STATICDEV32_RPM := $(filter-out ${STATICDEV32_RPM},${NO_DEV32_RPM}))
+	@for r in $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}); do \
+		echo -n "Installing $$r... "; \
+		rpm2cpio $$r | (cd /insilications/apps/test; sudo cpio -i -d -u 2> /dev/null); \
+		echo "done"; \
+	sudo chown -R boni:boni /insilications/apps/test; \
+	done
+
 #help install-mock: Install locally built RPMs to the mock rootcache
 #help filesystem. This command is usually used with "make shell".
 install-mock: repoadd
