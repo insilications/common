@@ -234,7 +234,7 @@ autospecnew: preautospecnew-checks localreponotice
 			--mock-config $(MOCK_CONFIG_VAL) \
 			--mock-opts="$(MOCK_OPTS)" \
 			$${SETVERSION:+ --version $${SETVERSION}} \
-			$${FROM_GIT:+ --download_from_git $${FROM_GIT}} \
+			$${FG:+ --download_from_git $${FG}} \
 			$${REDO_GIT:+ --redownload_from_git} \
 			$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
 			$${REDO_AR:+ --redownload_archive} \
