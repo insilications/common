@@ -185,7 +185,7 @@ autospec: preautospec-checks pullrebase localreponotice clean-old-content
 		$${NON_INTERACTIVE:+ --non_interactive} \
 		$${SKIP_GIT:+ --skip-git} \
 		$(AUTOSPEC_CLEANUP_OPT) \
-		$${FROM_GIT:+ --download_from_git $${FROM_GIT}} \
+		$${FG:+ --download_from_git $${FG}} \
 		$${REDO_GIT:+ --redownload_from_git} \
 		$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
 		$${REDO_AR:+ --redownload_archive} \
