@@ -192,13 +192,13 @@
   install %*
 
 %ninja_install_command() \
-  ninja --verbose -j %{?_smp_mflags} \\\
-	DESTDIR=%{?buildroot:%{buildroot}} \\\
+  DESTDIR=%{?buildroot:%{buildroot}} \\\
 	INSTALLROOT=%{?buildroot:%{buildroot}} \\\
 	install_prefix=%{?buildroot:%{buildroot}} \\\
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
+	ninja --verbose %{?_smp_mflags} \\\
   install %*
 
 %make_install_common() \
@@ -267,13 +267,13 @@
   chmod a+x %{?buildroot:%{buildroot}}$MPI_LIB/* || :
 
 %ninja_install32() \
-  ninja --verbose -j %{?_smp_mflags} \\\
-	DESTDIR=%{?buildroot:%{buildroot}} \\\
+  DESTDIR=%{?buildroot:%{buildroot}} \\\
 	INSTALLROOT=%{?buildroot:%{buildroot}} \\\
 	install_prefix=%{?buildroot:%{buildroot}} \\\
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
+	ninja --verbose %{?_smp_mflags} \\\
   install %* \
   rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir \
   rm -f %{?buildroot:%{buildroot}}/usr/lib/perl5/*/*/perllocal.pod \
