@@ -192,14 +192,14 @@
   install %*
 
 %ninja_install_command() \
-  ninja \\\
+  ninja --verbose -j %{?_smp_mflags} \\\
 	DESTDIR=%{?buildroot:%{buildroot}} \\\
 	INSTALLROOT=%{?buildroot:%{buildroot}} \\\
 	install_prefix=%{?buildroot:%{buildroot}} \\\
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
-  --verbose -j %{?_smp_mflags} install %*
+  install %*
 
 %make_install_common() \
   rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir \
@@ -267,14 +267,14 @@
   chmod a+x %{?buildroot:%{buildroot}}$MPI_LIB/* || :
 
 %ninja_install32() \
-  ninja \\\
+  ninja --verbose -j %{?_smp_mflags} \\\
 	DESTDIR=%{?buildroot:%{buildroot}} \\\
 	INSTALLROOT=%{?buildroot:%{buildroot}} \\\
 	install_prefix=%{?buildroot:%{buildroot}} \\\
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
-  --verbose -j %{?_smp_mflags} install %* \
+  install %* \
   rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir \
   rm -f %{?buildroot:%{buildroot}}/usr/lib/perl5/*/*/perllocal.pod \
   find %{?buildroot:%{buildroot}} -regex ".*\\.la$" | xargs rm -f -- \
