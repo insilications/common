@@ -52,6 +52,15 @@
 # ---- configure and makeinstall.
 #
 %configure \
+  CFLAGS="$CFLAGS" ; export CFLAGS ; \
+  CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
+  FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
+  FFLAGS="$FFLAGS" ; export FFLAGS ; \
+  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
+  LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
+  AR="$AR" ; export AR ; \
+  RANLIB="$RANLIB" ; export RANLIB ; \
+  NM="$NM" ; export NM ; \
   [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   ./configure --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
@@ -71,6 +80,16 @@
 	--infodir=%{_infodir}
 
 %reconfigure \
+  CFLAGS="$CFLAGS" ; export CFLAGS ; \
+  CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
+  FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
+  FFLAGS="$FFLAGS" ; export FFLAGS ; \
+  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
+  LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
+  AR="$AR" ; export AR ; \
+  RANLIB="$RANLIB" ; export RANLIB ; \
+  NM="$NM" ; export NM ; \
+  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   autoreconf -v --install --force || exit 1 \
   [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   ./configure --build=%{_build} --host=%{_host} \\\
@@ -92,6 +111,16 @@
 	--disable-maintainer-mode
 
 %autogen \
+  CFLAGS="$CFLAGS" ; export CFLAGS ; \
+  CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
+  FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
+  FFLAGS="$FFLAGS" ; export FFLAGS ; \
+  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
+  LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
+  AR="$AR" ; export AR ; \
+  RANLIB="$RANLIB" ; export RANLIB ; \
+  NM="$NM" ; export NM ; \
+  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   NOCONFIGURE="noconfigure"; export NOCONFIGURE ; \
   sh ./autogen.sh --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
@@ -131,6 +160,15 @@
 
 
 %waf \
+  CFLAGS="$CFLAGS" ; export CFLAGS ; \
+  CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
+  FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
+  FFLAGS="$FFLAGS" ; export FFLAGS ; \
+  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
+  LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
+  AR="$AR" ; export AR ; \
+  RANLIB="$RANLIB" ; export RANLIB ; \
+  NM="$NM" ; export NM ; \
   ./waf configure \\\
 	--prefix=%{_prefix} \\\
 	--exec-prefix=%{_exec_prefix} \\\
