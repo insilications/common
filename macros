@@ -48,6 +48,15 @@
     diff -u $file.backup $file && mv $file.backup $file \
   done
 
+  %_smp_mflags %([ -z "$RPM_BUILD_NCPUS" ] \\\
+	&& RPM_BUILD_NCPUS="`/usr/bin/getconf _NPROCESSORS_ONLN`"; \\\
+	[ "$RPM_BUILD_NCPUS" -gt 1 ] && echo "-j$RPM_BUILD_NCPUS")
+
+%_tcl_auto_path %(TCL_AUTO_PATH="`/usr/bin/tclsh /usr/lib/rpm/clr/auto_path.tcl`"; \\\
+	echo "$TCL_AUTO_PATH")
+
+%tcl_lib_path %{?buildroot:%{buildroot}}%{?_tcl_auto_path:%{_tcl_auto_path}}
+
 #==============================================================================
 # ---- configure and makeinstall.
 #
@@ -220,7 +229,8 @@
   install
 
 %make_install_command() \
-  %{__make} %{?_smp_mflags} \\\
+  %{__make} \\\
+	%{?_smp_mflags:%{_smp_mflags}} \\\
 	DESTDIR=%{?buildroot:%{buildroot}} \\\
 	INSTALLROOT=%{?buildroot:%{buildroot}} \\\
 	install_prefix=%{?buildroot:%{buildroot}} \\\
@@ -236,7 +246,8 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
-	ninja --verbose %{?_smp_mflags} \\\
+	ninja --verbose \\\
+	%{?_smp_mflags:%{_smp_mflags}} \\\
   install %*
 
 %configure_buildtcl \
@@ -258,7 +269,8 @@
 	--infodir=%{_infodir}
 
 %buildtcl_configure_install_command() \
-  make %{?_smp_mflags} \\\
+  make \\\
+	%{?_smp_mflags:%{_smp_mflags}} \\\
 	DESTDIR=%{?buildroot:%{buildroot}} \\\
 	INSTALLROOT=%{?buildroot:%{buildroot}} \\\
 	install_prefix=%{?buildroot:%{buildroot}} \\\
@@ -352,7 +364,8 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
-	ninja --verbose %{?_smp_mflags} \\\
+	ninja --verbose \\\
+	%{?_smp_mflags:%{_smp_mflags}} \\\
   install %* \
   rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir \
   rm -f %{?buildroot:%{buildroot}}/usr/lib/perl5/*/*/perllocal.pod \
@@ -445,15 +458,6 @@
   chmod a+x %{?buildroot:%{buildroot}}/lib/* || : \
   %{!?keepstatic:find %{?buildroot:%{buildroot}} -regex ".*\\.la$" | xargs rm -f --}   \
   %{!?keepstatic:find %{?buildroot:%{buildroot}} -regex ".*\\.a$" | xargs rm -f --}
-
-%_smp_mflags %([ -z "$RPM_BUILD_NCPUS" ] \\\
-	&& RPM_BUILD_NCPUS="`/usr/bin/getconf _NPROCESSORS_ONLN`"; \\\
-	[ "$RPM_BUILD_NCPUS" -gt 1 ] && echo "-j$RPM_BUILD_NCPUS")
-
-%_tcl_auto_path %(TCL_AUTO_PATH="`/usr/bin/tclsh /usr/lib/rpm/clr/auto_path.tcl`"; \\\
-	echo "$TCL_AUTO_PATH")
-
-%tcl_lib_path %{?buildroot:%{buildroot}}%{?_tcl_auto_path:%{_tcl_auto_path}}
 
 %install_info(:-:) \
         ALL_ARGS=(%{**}) \
