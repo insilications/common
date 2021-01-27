@@ -220,7 +220,7 @@
   install
 
 %make_install_command() \
-  %{__make} \\\
+  %{__make} %{?_smp_mflags} \\\
 	DESTDIR=%{?buildroot:%{buildroot}} \\\
 	INSTALLROOT=%{?buildroot:%{buildroot}} \\\
 	install_prefix=%{?buildroot:%{buildroot}} \\\
