@@ -210,6 +210,16 @@
       QMAKE_CFLAGS_RELEASE= \\\
       QMAKE_CXXFLAGS_RELEASE=
 
+%scons_config \
+  scons config \\\
+    --prefix=%{_prefix} \\\
+    --libdir=%{_lib}
+
+%scons_install \
+  scons install \\\
+    --prefix=%{_prefix} \\\
+    --libdir=%{_lib}
+
 %makeinstall \
   %{__make} \\\
 	prefix=%{?buildroot:%{buildroot}}%{_prefix} \\\
