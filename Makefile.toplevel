@@ -168,8 +168,8 @@ status: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_ALL))
 
 #help diff: Runs git diff for all package repos and displays the output using
 #help diffstat. Requires that diffstat is installed.
-diff: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_LOCAL))
-	@for p in projects/common $(addprefix packages/,$(PKGS_LOCAL)); do \
+diff: $(PACKAGES_FILE) $(addprefix packages/,$(PKGS_ALL))
+	@for p in projects/common $(addprefix packages/,$(PKGS_ALL)); do \
 		(cd $$p; git status --porcelain | grep -vq '^?? ' && (echo "Uncommitted changes in: $$p"; git diff | diffstat -p1); :) ;\
 	done
 
