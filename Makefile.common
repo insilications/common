@@ -565,7 +565,19 @@ install-local:
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	done
-	@$(MAKE) -s install-debuginfo-local
+	@$(MAKE) -s install-debuginfo-local; \
+	sudo ldconfig;
+
+#help install-local: Install locally built RPMs to the root filesystem. Note that the
+#help debuginfo RPM installs to /var/cache/debuginfo
+install-local-all:
+	@for r in $(filter-out ${ABI_RPM},${DEBUGINFO_RPM},${RPMS}); do \
+		echo -n "Installing $$r... "; \
+		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
+		echo "done"; \
+	done
+	@$(MAKE) -s install-debuginfo-local; \
+	sudo ldconfig;
 
 #help t-local: Install locally built RPMs to a test filesystem.
 install-t:
@@ -578,6 +590,7 @@ install-t:
 		rpm2cpio $$r | (cd /aot/apps/test; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	sudo chown -R boni:boni /aot/apps/test; \
+	sudo ldconfig; \
 	done
 
 #help install-mock: Install locally built RPMs to the mock rootcache
