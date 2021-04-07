@@ -438,6 +438,7 @@
 
 %make_install32() \
   %{__make} \\\
+	%{?_smp_mflags:%{_smp_mflags}} \\\
 	DESTDIR=%{?buildroot:%{buildroot}} \\\
 	INSTALLROOT=%{?buildroot:%{buildroot}} \\\
 	install_prefix=%{?buildroot:%{buildroot}} \\\
