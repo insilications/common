@@ -1,5 +1,13 @@
 #-*-makefile-*-
 
+undefine CFLAGS
+undefine CXXFLAGS
+undefine FCFLAGS
+undefine FFLAGS
+undefine CFFLAGS
+undefine LDFLAGS
+undefine RPM_OPT_FLAGS
+
 all: build
 
 TOPLVL = ../..
