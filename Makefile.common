@@ -31,6 +31,7 @@ LIB32_RPM = $(wildcard rpms/*lib32-*.rpm)
 DEV32_RPM = $(wildcard rpms/*dev32-*.rpm)
 STATICDEV32_RPM = $(wildcard rpms/*staticdev32-*.rpm)
 ABI_RPM = $(wildcard rpms/*-abi-*.rpm)
+STATICDEV_RPM = $(wildcard rpms/*staticdev-*.rpm)
 
 WITH_SUDO = $(shell cmp /usr/bin/mock /usr/sbin/mock &> /dev/null && echo sudo )
 
@@ -573,6 +574,22 @@ install-local:
 	$(eval NO_DEV32_RPM := $(filter-out ${DEV32_RPM},${NO_LIB32_RPM}))
 	$(eval NO_STATICDEV32_RPM := $(filter-out ${STATICDEV32_RPM},${NO_DEV32_RPM}))
 	@for r in $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}); do \
+		echo -n "Installing $$r... "; \
+		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
+		echo "done"; \
+	done
+	@$(MAKE) -s install-debuginfo-local; \
+	sudo ldconfig;
+
+#help install-local: Install locally built RPMs to the root filesystem. Note that the
+#help debuginfo RPM installs to /var/cache/debuginfo
+install-local-no-static:
+	$(eval NO_DEBUGINFO_RPMS := $(filter-out ${DEBUGINFO_RPM},${RPMS}))
+	$(eval NO_LIB32_RPM := $(filter-out ${LIB32_RPM},${NO_DEBUGINFO_RPMS}))
+	$(eval NO_DEV32_RPM := $(filter-out ${DEV32_RPM},${NO_LIB32_RPM}))
+	$(eval NO_STATICDEV32_RPM := $(filter-out ${STATICDEV32_RPM},${NO_DEV32_RPM}))
+	$(eval NO_STATICDEV_RPM := $(filter-out ${STATICDEV_RPM},${NO_STATICDEV32_RPM}))
+	@for r in $(filter-out ${ABI_RPM},${NO_STATICDEV_RPM}); do \
 		echo -n "Installing $$r... "; \
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
