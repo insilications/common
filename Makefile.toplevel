@@ -21,6 +21,8 @@ PKGS_ALL = $(sort $(filter-out common ${PGS_DOWNSTREAM},$(subst packages/,,$(wil
 
 proj_PKGS = $(addprefix proj_,$(PROJ_PKGS))
 clone_PKGS = $(addprefix clone_,$(PKGS))
+myclone_PKGS = $(addprefix myclone_,$(PKGS))
+
 
 #help clone: Clones any new package/project in the git tree that you didn't
 #help already check out. If you already have a package checked out,
@@ -63,6 +65,20 @@ $(clone_PKGS): $(PACKAGES_FILE) packages/common/Makefile.common
 	$(call gitoliteurl,packages/$$pkg); \
 	$(call subjectprefix,$$pkg); \
 	git checkout -b patched; \
+	)
+
+$(myclone_PKGS): $(PACKAGES_FILE) packages/common/Makefile.common
+	@pkg=$(patsubst myclone_%,%,$@); \
+	remotepkg=$(call remotepkgname,$$pkg); \
+	[ -d packages/$$pkg ] || ( \
+	echo "Checking out: packages/$$pkg"; \
+	git clone --origin insilications $(MYPKG_BASE_URL)/$$remotepkg packages/$$pkg; \
+	cd packages/$$pkg; \
+	git branch -m patched; \
+	git remote add clearlinux $(PKG_BASE_URL)/$$remotepkg; \
+	git fetch clearlinux; \
+	git checkout -b master clearlinux/master; \
+	git checkout patched; \
 	)
 
 #help pull: Performs a git pull --rebase for each package repo, avoiding the creation
