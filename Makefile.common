@@ -244,7 +244,8 @@ autospecbinary:
 
 #help root: Runs root shell for /aot/var/lib/mock
 shellaot:
-	$(MAKE) shell SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock"
+	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "cd && exec \$$SHELL -l -i"
+# 	$(MAKE) shell --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
 
 #help autospecnostate: Runs autospec, but cleans up mock chroots
 #help and disables interactive mode.
