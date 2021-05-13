@@ -33,6 +33,17 @@ STATICDEV32_RPM = $(wildcard rpms/*staticdev32-*.rpm)
 ABI_RPM = $(wildcard rpms/*-abi-*.rpm)
 STATICDEV_RPM = $(wildcard rpms/*staticdev-*.rpm)
 
+ALL_LATEST_RPMS = $(wildcard ../../repo/*.rpm)
+ALL_DEBUGINFO_RPM = $(wildcard ../../repo/*debuginfo-*.rpm)
+ALL_RPMS ?= $(ALL_LATEST_RPMS)
+ALL_LIB32_RPM = $(wildcard ../../repo/*lib32-*.rpm)
+ALL_DEV32_RPM = $(wildcard ../../repo/*dev32-*.rpm)
+ALL_STATICDEV32_RPM = $(wildcard ../../repo/*staticdev32-*.rpm)
+ALL_ABI_RPM = $(wildcard ../../repo/*-abi-*.rpm)
+ALL_STATICDEV_RPM = $(wildcard ../../repo/*staticdev-*.rpm)
+ALL_IGNORE_CUDA_RPM = $(wildcard ../../repo/cuda-*.rpm)
+ALL_IGNORE_NVIDIA_RPM = $(wildcard ../../repo/nvidia-*.rpm)
+
 WITH_SUDO = $(shell cmp /usr/bin/mock /usr/sbin/mock &> /dev/null && echo sudo )
 
 # MOCK_CONFIG_VAL is set in Makefile.shared
@@ -575,6 +586,22 @@ install-local:
 	$(eval NO_DEV32_RPM := $(filter-out ${DEV32_RPM},${NO_LIB32_RPM}))
 	$(eval NO_STATICDEV32_RPM := $(filter-out ${STATICDEV32_RPM},${NO_DEV32_RPM}))
 	@for r in $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}); do \
+		echo -n "Installing $$r... "; \
+		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
+		echo "done"; \
+	done
+	@$(MAKE) -s install-debuginfo-local; \
+	sudo ldconfig;
+
+#help install-local-repo-all: Install all locally built RPMs to the root filesystem.
+install-local-all-repo:
+	$(eval NO_DEBUGINFO_RPMS := $(filter-out ${ALL_DEBUGINFO_RPM},${ALL_RPMS}))
+	$(eval NO_CUDA_RPM := $(filter-out ${ALL_IGNORE_CUDA_RPM},${NO_DEBUGINFO_RPMS}))
+	$(eval NO_NVIDIA_RPM := $(filter-out ${ALL_IGNORE_NVIDIA_RPM},${NO_CUDA_RPM}))
+	$(eval NO_LIB32_RPM := $(filter-out ${ALL_LIB32_RPM},${NO_NVIDIA_RPM}))
+	$(eval NO_DEV32_RPM := $(filter-out ${ALL_DEV32_RPM},${NO_LIB32_RPM}))
+	$(eval NO_STATICDEV32_RPM := $(filter-out ${ALL_STATICDEV32_RPM},${NO_DEV32_RPM}))
+	@for r in $(filter-out ${ALL_ABI_RPM},${NO_STATICDEV32_RPM}); do \
 		echo -n "Installing $$r... "; \
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
