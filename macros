@@ -195,6 +195,7 @@
 %cmake \
   cmake -G "Unix Makefiles" \\\
     -DBUILD_SHARED_LIBS:BOOL=ON \\\
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \\\
     -DCMAKE_INSTALL_PREFIX=%{_prefix} \\\
     -DCMAKE_INSTALL_SBINDIR=%{_sbindir} \\\
     -DCMAKE_INSTALL_LIBDIR=%{_libdir} -DLIB_INSTALL_DIR=%{_libdir} -DLIB_SUFFIX=64 \\\
