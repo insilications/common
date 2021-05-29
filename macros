@@ -820,3 +820,5 @@ install -D -m 644 %1-16.png $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/16x16/apps/
 #
 %_source_payload       w0.gzdio
 %_binary_payload       w6.gzdio
+
+%__requires_filter /usr/nvidia:/usr/local/cuda:/aot/intel/oneapi
