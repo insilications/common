@@ -256,7 +256,8 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
-	ninja --verbose \\\
+	ninja \\\
+	--verbose \\\
 	%{?_smp_mflags:%{_smp_mflags}} \\\
   install %*
 
