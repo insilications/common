@@ -574,17 +574,15 @@ This package provides abi files for package %{name}.\
 %%prep\
 LANG=en_US.UTF-8\
 export LANG\
-unset DISPLAY\
 %{nil}
 
 %build %%build\
 LANG=en_US.UTF-8\
 export LANG\
-unset DISPLAY\
 unset PYTHONOPTIMIZE \
 LD_AS_NEEDED=1; export LD_AS_NEEDED ; \
 PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig; export PKG_CONFIG_LIBDIR ; \
-PATH="/usr/lib64/ccache/bin:/usr/local/bin:/usr/bin"; export PATH ; \
+PATH="/usr/local/cuda/bin:/usr/nvidia/bin:/usr/bin/haswell:/usr/bin:/usr/sbin"; export PATH ; \
 %{nil}
 
 %install %{?_enable_debug_packages:%{?buildsubdir:%{debug_package}}}\
@@ -592,8 +590,8 @@ PATH="/usr/lib64/ccache/bin:/usr/local/bin:/usr/bin"; export PATH ; \
 %%install\
 LANG=en_US.UTF-8\
 export LANG\
-unset DISPLAY\
 unset PYTHONOPTIMIZE \
+PATH="/usr/local/cuda/bin:/usr/nvidia/bin:/usr/bin/haswell:/usr/bin:/usr/sbin"; export PATH ; \
 rm -rf %{?buildroot:%{buildroot}} \
 mkdir -p %{?buildroot:%{buildroot}} \
 %{nil}
@@ -601,7 +599,6 @@ mkdir -p %{?buildroot:%{buildroot}} \
 %check %%check\
 LANG=en_US.UTF-8\
 export LANG\
-unset DISPLAY\
 unset PYTHONOPTIMIZE \
 %{nil}
 
