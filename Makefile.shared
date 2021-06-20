@@ -154,7 +154,7 @@ localrepodisable: $(TOPLVL)/repo
 
 # Runs createrepo_c for the local RPM repo
 localrepocreate: $(TOPLVL)/repo
-	cd $< && flock repo.lock createrepo_c --workers 16 .
+	cd $< && flock repo.lock -c "PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so createrepo_c --workers 16 ."
 
 # Remove all RPMs from the local RPM repo
 localrepoclean: $(TOPLVL)/repo
