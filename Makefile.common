@@ -48,7 +48,7 @@ WITH_SUDO = $(shell cmp /usr/bin/mock /usr/sbin/mock &> /dev/null && echo sudo )
 
 # MOCK_CONFIG_VAL is set in Makefile.shared
 MOCK_SMP_FLAGS=$(patsubst -j%, -D_smp_mflags\ -j%,$(filter -j%, $(MAKEFLAGS)))
-MOCK ?= $(WITH_SUDO) PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib/libmimalloc.so /usr/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
+MOCK ?= $(WITH_SUDO) PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so /usr/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
 
 ifneq ($(wildcard upstream),)
 __allsources := $(notdir $(strip $(shell cat upstream)))
