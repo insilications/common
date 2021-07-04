@@ -209,6 +209,7 @@
       QMAKE_CXXFLAGS="$CXXFLAGS" \\\
       QMAKE_LFLAGS="$LDFLAGS" \\\
       QMAKE_CFLAGS_RELEASE= \\\
+      QT_CPU_FEATURES.x86_64+="avx avx2 bmi bmi2 f16c fma lzcnt popcnt" \\\
       QMAKE_CXXFLAGS_RELEASE=
 
 %scons_config \
