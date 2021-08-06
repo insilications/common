@@ -86,6 +86,11 @@ proper: repodel
 	rm -f build.log.round*
 	rm -f mock_build.log mock_srpm.log $(__allsources) report.html
 
+#help mockcleancache: Clean mock chroots cache
+mockcleandnf:
+	$(MOCK) --result=results/ --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --scrub=dnf-cache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
+	sudo rm -rf /aot/var/lib/mock/clear-$(PKG_NAME)/root/var/lib/
+
 #help mockclean: Clean all mock chroots and cache directories for all packages.
 mockclean:
 	$(MOCK) --clean --scrub=all
