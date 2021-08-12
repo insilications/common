@@ -284,10 +284,10 @@ builditccache:
 
 #help root: Runs root shell for /aot/var/lib/mock
 shellaot:
-	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "cd && exec \$$SHELL -l -i"
+	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "cd build/BUILD/ && exec \$$SHELL -l -i"
 
 shellaotcc:
-	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "cd && exec \$$SHELL -l -i"
+	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "cd build/BUILD/ && exec \$$SHELL -l -i"
 
 #help autospecnostate: Runs autospec, but cleans up mock chroots
 #help and disables interactive mode.

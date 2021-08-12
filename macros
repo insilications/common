@@ -86,7 +86,8 @@
 	--localstatedir=%{_localstatedir} \\\
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
-	--infodir=%{_infodir}
+	--infodir=%{_infodir} \\\
+	--disable-dependency-tracking
 
 %reconfigure \
   CFLAGS="$CFLAGS" ; export CFLAGS ; \
@@ -117,6 +118,7 @@
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} \\\
+	--disable-dependency-tracking \\\
 	%{?_disable_maintainer_mode: --disable-maintainer-mode}
 
 %autogen \
@@ -147,6 +149,7 @@
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} \\\
+	--disable-dependency-tracking \\\
 	%{?_disable_maintainer_mode: --disable-maintainer-mode} || : \
   [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   ./configure --build=%{_build} --host=%{_host} \\\
@@ -165,6 +168,7 @@
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} \\\
+	--disable-dependency-tracking \\\
 	%{?_disable_maintainer_mode: --disable-maintainer-mode}
 
 %waf \
@@ -821,3 +825,5 @@ install -D -m 644 %1-16.png $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/16x16/apps/
 %_binary_payload       w6.gzdio
 
 %__requires_filter /usr/nvidia:/usr/local/cuda:/aot/intel/oneapi
+
+%__gzip /usr/bin/pigz
