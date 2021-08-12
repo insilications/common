@@ -87,6 +87,7 @@
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} \\\
+	--disable-gcc-warnings \\\
 	--disable-dependency-tracking
 
 %reconfigure \
@@ -99,7 +100,6 @@
   AR="$AR" ; export AR ; \
   RANLIB="$RANLIB" ; export RANLIB ; \
   NM="$NM" ; export NM ; \
-  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   autoreconf -v --install --force || exit 1 \
   [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   ./configure --build=%{_build} --host=%{_host} \\\
@@ -119,6 +119,7 @@
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} \\\
 	--disable-dependency-tracking \\\
+	--disable-gcc-warnings \\\
 	%{?_disable_maintainer_mode: --disable-maintainer-mode}
 
 %autogen \
@@ -131,7 +132,6 @@
   AR="$AR" ; export AR ; \
   RANLIB="$RANLIB" ; export RANLIB ; \
   NM="$NM" ; export NM ; \
-  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
   NOCONFIGURE="noconfigure"; export NOCONFIGURE ; \
   sh ./autogen.sh --build=%{_build} --host=%{_host} \\\
 	--target=%{_target_platform} \\\
@@ -149,6 +149,7 @@
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} \\\
+	--disable-gcc-warnings \\\
 	--disable-dependency-tracking \\\
 	%{?_disable_maintainer_mode: --disable-maintainer-mode} || : \
   [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
@@ -168,15 +169,14 @@
 	--sharedstatedir=%{_sharedstatedir} \\\
 	--mandir=%{_mandir} \\\
 	--infodir=%{_infodir} \\\
+	--disable-gcc-warnings \\\
 	--disable-dependency-tracking \\\
 	%{?_disable_maintainer_mode: --disable-maintainer-mode}
 
 %waf \
   CFLAGS="$CFLAGS" ; export CFLAGS ; \
   CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
-  FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
-  FFLAGS="$FFLAGS" ; export FFLAGS ; \
-  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
+  FFLAGS="${FFLAGS:-I%_fmoddir}" ; export FFLAGS ; \
   LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
   AR="$AR" ; export AR ; \
   RANLIB="$RANLIB" ; export RANLIB ; \

@@ -22,8 +22,8 @@ if [ "$#" -eq 0 ]; then
   exit 0
 fi
 
-if [ ! -e /etc/yum.conf ]; then
-  echo "Error: yum.conf is missing. Please copy projects/common/conf/yum.conf to /etc"
+if [ ! -e /etc/dnf.conf ]; then
+  echo "Error: dnf.conf is missing. Please copy projects/common/conf/dnf.conf to /etc"
   exit 1
 fi
 

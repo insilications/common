@@ -126,12 +126,12 @@ localrepoenable: $(TOPLVL)/repo
 		echo "[ERROR] Fix that line and try again."; \
 		exit 1; \
 	fi >&2
-	@pm_new=$$(mktemp -p $< yum.conf.XXXXXXX); \
-	pm_orig=$</yum.conf; \
+	@pm_new=$$(mktemp -p $< dnf.conf.XXXXXXX); \
+	pm_orig=$</dnf.conf; \
 	mock_new=$$(mktemp -p $< clear.cfg.XXXXXXX); \
 	mock_orig=$</clear.cfg; \
 	cp ${PM_CONF} $$pm_new; \
-	printf "\n\n[localrepo]\nname=localrepo\nenabled=1\ngpgcheck=0\npriority=1\nmetadata_expire=0\ncost=1\n" >> $$pm_new; \
+	printf "\n\n[localrepo]\nname=localrepo\nenabled=1\ngpgcheck=0\npriority=1\nmetadata_expire=1\ncost=1\nmax_parallel_downloads=5\n" >> $$pm_new; \
 	printf "baseurl=file://$$(realpath $<)/\n\n" >> $$pm_new; \
 	if ! cmp -s $$pm_new $$pm_orig; then \
 		flock $</repo.lock mv $$pm_new $$pm_orig; \
@@ -139,7 +139,7 @@ localrepoenable: $(TOPLVL)/repo
 	rm -f $$pm_new; \
 	cp ${MOCK_CONF} $$mock_new; \
 	sed -i '$$d' $$mock_new; \
-	printf "\n\n[localrepo]\nname=localrepo\nenabled=1\ngpgcheck=0\npriority=1\nmetadata_expire=0\ncost=1\n" >> $$mock_new; \
+	printf "\n\n[localrepo]\nname=localrepo\nenabled=1\ngpgcheck=0\npriority=1\nmetadata_expire=1\ncost=1\nmax_parallel_downloads=5\n" >> $$mock_new; \
 	printf "baseurl=file://$$(realpath $<)/\n\n" >> $$mock_new; \
 	sed -i '$$a"""' $$mock_new; \
 	if ! cmp -s $$mock_new $$mock_orig; then \
@@ -150,7 +150,7 @@ localrepoenable: $(TOPLVL)/repo
 # Disables the local RPM repo by removing the installed package manager and
 # Mock configuration files.
 localrepodisable: $(TOPLVL)/repo
-	flock $</repo.lock rm -f $</yum.conf $</clear.cfg
+	flock $</repo.lock rm -f $</dnf.conf $</clear.cfg
 
 # Runs createrepo_c for the local RPM repo
 localrepocreate: $(TOPLVL)/repo
@@ -166,10 +166,10 @@ localrepostatus:
 		echo '** Local repo not found'; \
 		exit 0; \
 	fi; \
-	if [ -f $(TOPLVL)/repo/yum.conf ]; then \
-		echo '** Local repo enabled for Yum/DNF.'; \
+	if [ -f $(TOPLVL)/repo/dnf.conf ]; then \
+		echo '** Local repo enabled for dnf/DNF.'; \
 	else \
-		echo '** Local repo not enabled for Yum/DNF.'; \
+		echo '** Local repo not enabled for dnf/DNF.'; \
 	fi; \
 	if [ -f $(TOPLVL)/repo/clear.cfg ]; then \
 		echo '** Local repo enabled for Mock.'; \
@@ -196,7 +196,7 @@ ifeq ($(wildcard $(TOPLVL)/repo/clear.cfg),)
 MOCK_CONFIG_VAL = $(realpath $(MOCK_CONF))
 else
 MOCK_CONFIG_VAL = $(realpath $(TOPLVL)/repo/clear.cfg)
-USE_LOCAL_REPO = 1
+# USE_LOCAL_REPO = 1
 endif
 
 localreponotice:

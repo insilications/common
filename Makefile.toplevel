@@ -223,7 +223,7 @@ preautospecnew-checks:
 #help Use MOCK_OPTS environment varible to pass down arbitrary mock options
 #help to autospec.
 #help For more information about autospec, see the project page on Github https://github.com/clearlinux/autospec
-autospecnew: preautospecnew-checks localreponotice
+autospecnew: preautospecnew-checks
 	@if [ -z $(NAME) ] || [ -z $(URL) ]; then \
 		echo "Please specify NAME and URL. The ARCHIVES variable is optional."; \
 		exit 1; \
@@ -281,7 +281,7 @@ autospecnew: preautospecnew-checks localreponotice
 #help Use MOCK_OPTS environment varible to pass down arbitrary mock options
 #help to autospec.
 #help For more information about autospec, see the project page on Github https://github.com/clearlinux/autospec
-autospecnewgo: preautospecnew-checks localreponotice
+autospecnewgo: preautospecnew-checks
 	@if [ -z $(NAME) ] || [ -z $(URL) ]; then \
 		echo "Please specify NAME and URL. The ARCHIVES variable is optional."; \
 		exit 1; \
