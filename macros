@@ -31,6 +31,14 @@
 #       Default fuzz level for %patch in spec file.
 %_default_patch_fuzz    2
 
+# Default patch flags
+#
+# Upstream's default (as of rpm 4.17) is `--no-backup-if-mismatch -f`, but
+# because `-f` suppresses the reverse patch diagnostic reporting that we might
+# want for a future autospec feature [0], omit that flag.
+# [0]: https://github.com/clearlinux/autospec/issues/454
+%_default_patch_flags --no-backup-if-mismatch
+
 # avoid aborting with packages without debugfiles.list
 %_empty_manifest_terminate_build 0
 
@@ -206,7 +214,8 @@
     -DCMAKE_NM=/usr/bin/gcc-nm \\\
     -DCMAKE_AR=/usr/bin/gcc-ar \\\
     -DCMAKE_BUILD_TYPE="None" \\\
-    -DCMAKE_RANLIB=/usr/bin/gcc-ranlib
+    -DCMAKE_RANLIB=/usr/bin/gcc-ranlib \\\
+    -DCMAKE_CTEST_ARGUMENTS="--output-on-failure"
 
 %qmake \
   qmake QMAKE_CFLAGS="$CFLAGS" \\\
@@ -304,8 +313,6 @@
   rm -rf %{?buildroot:%{buildroot}}/usr/lib64/haswell/avx512_1/pkgconfig \
   rm -rf %{?buildroot:%{buildroot}}/usr/local \
   rm -f %{?buildroot:%{buildroot}}/usr/lib/perl5/*/*/perllocal.pod \
-  find %{?buildroot:%{buildroot}} -regex ".*\\.la$" | xargs rm -f -- \
-  find %{?buildroot:%{buildroot}} -regex ".*\\.pyo$" | xargs rm -f -- \
   [ -d %{?buildroot:%{buildroot}}/etc/dbus-1 ] && mkdir -p %{?buildroot:%{buildroot}}/usr/share/dbus-1  || : \
   [ -d %{?buildroot:%{buildroot}}/etc/dbus-1 ] && mv %{?buildroot:%{buildroot}}/etc/dbus-1/* %{?buildroot:%{buildroot}}/usr/share/dbus-1/  || : \
   [ -d %{?buildroot:%{buildroot}}/sbin ] && mkdir %{?buildroot:%{buildroot}}/usr/bin/  || : \
@@ -323,52 +330,42 @@
   [ -d %{?buildroot:%{buildroot}}/sbin ] && rmdir %{?buildroot:%{buildroot}}/sbin || : \
   [ -d %{?buildroot:%{buildroot}}/bin ] && rmdir %{?buildroot:%{buildroot}}/bin || : \
   chmod a+x %{?buildroot:%{buildroot}}{/usr,}/lib{,32,64}/*.so* || : \
-  %{!?keepstatic:find %{?buildroot:%{buildroot}} -regex ".*\\.la$" | xargs rm -f --}   \
   %{!?keepstatic:find %{?buildroot:%{buildroot}} -regex ".*\\.a$" | xargs rm -f --}
 
 %buildtcl_configure_install() \
   %{buildtcl_configure_install_command} %* \
-  %{make_install_common} \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  %{make_install_common}
 
 %buildtcl_script_install() \
   %{buildtcl_script_install_command} %* \
-  %{make_install_common} \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  %{make_install_common}
 
 %ninja_install() \
   %{ninja_install_command} %* \
-  %{make_install_common} \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  %{make_install_common}
 
 %ninja_install_special() \
   %{ninja_install_command} %* \
-  %{make_install_common} \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  %{make_install_common}
 
 %ninja_install_special2() \
   %{ninja_install_command} %* \
-  %{make_install_common} \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  %{make_install_common}
 
 %ninja_install_avx2() \
   %{ninja_install_command} %* \
   %{make_install_common} \
-  /usr/bin/clr-avx2-move.pl haswell .avx2 %{?buildroot:%{buildroot}}/ \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  /usr/bin/clr-avx2-move.pl haswell .avx2 %{?buildroot:%{buildroot}}/
 
 %ninja_install_avx512() \
   %{ninja_install_command} %* \
   %{make_install_common} \
-  /usr/bin/clr-avx2-move.pl haswell/avx512_1 .avx512 %{?buildroot:%{buildroot}}/ \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  /usr/bin/clr-avx2-move.pl haswell/avx512_1 .avx512 %{?buildroot:%{buildroot}}/
 
 %ninja_install_openmpi() \
   %{ninja_install_command} %* \
   rm -f %{?buildroot:%{buildroot}}$MPI_ROOT/share/info/dir \
   rm -f %{?buildroot:%{buildroot}}$MPI_LIB/perl5/*/*/perllocal.pod \
-  find %{?buildroot:%{buildroot}}$MPI_ROOT -regex ".*\\.la$" | xargs rm -f -- \
-  find %{?buildroot:%{buildroot}}$MPI_ROOT -regex ".*\\.pyo$" | xargs rm -f -- \
   %{!?keepstatic:find %{?buildroot:%{buildroot}}$MPI_ROOT -regex ".*\\.a$" | xargs rm -f --} \
   chmod a+x %{?buildroot:%{buildroot}}$MPI_BIN/* || : \
   chmod a+x %{?buildroot:%{buildroot}}$MPI_LIB/* || :
@@ -385,8 +382,6 @@
   install %* \
   rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir \
   rm -f %{?buildroot:%{buildroot}}/usr/lib/perl5/*/*/perllocal.pod \
-  find %{?buildroot:%{buildroot}} -regex ".*\\.la$" | xargs rm -f -- \
-  find %{?buildroot:%{buildroot}} -regex ".*\\.pyo$" | xargs rm -f -- \
   [ -d %{?buildroot:%{buildroot}}/sbin ] && mkdir %{?buildroot:%{buildroot}}/usr/bin/  || : \
   [ -d %{?buildroot:%{buildroot}}/bin ] && mkdir %{?buildroot:%{buildroot}}/usr/bin/  || : \
   [ -d %{?buildroot:%{buildroot}}/usr/sbin ] && mkdir %{?buildroot:%{buildroot}}/usr/bin/  || : \
@@ -403,42 +398,34 @@
   [ -d %{?buildroot:%{buildroot}}/bin ] && rmdir %{?buildroot:%{buildroot}}/bin || : \
   chmod a+x %{?buildroot:%{buildroot}}/usr/lib32/* || : \
   chmod a+x %{?buildroot:%{buildroot}}/lib/* || : \
-  %{!?keepstatic:find %{?buildroot:%{buildroot}} -regex ".*\\.la$" | xargs rm -f --}   \
   %{!?keepstatic:find %{?buildroot:%{buildroot}} -regex ".*\\.a$" | xargs rm -f --}
 
 %make_install() \
   %{make_install_command} %* \
-  %{make_install_common} \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  %{make_install_common}
 
 %make_install_special() \
   %{make_install_command} %* \
-  %{make_install_common} \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  %{make_install_common}
 
 %make_install_special2() \
   %{make_install_command} %* \
-  %{make_install_common} \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  %{make_install_common}
 
 %make_install_avx2() \
   %{make_install_command} %* \
   %{make_install_common} \
-  /usr/bin/clr-avx2-move.pl haswell .avx2 %{?buildroot:%{buildroot}}/ \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  /usr/bin/clr-avx2-move.pl haswell .avx2 %{?buildroot:%{buildroot}}/
 
 %make_install_avx512() \
   %{make_install_command} %* \
   %{make_install_common} \
-  /usr/bin/clr-avx2-move.pl haswell/avx512_1 .avx512 %{?buildroot:%{buildroot}}/ \
-  find %{?buildroot:%{buildroot}}/ -print0 | xargs -r0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || :
+  /usr/bin/clr-avx2-move.pl haswell/avx512_1 .avx512 %{?buildroot:%{buildroot}}/
 
 %make_install_openmpi() \
   %{make_install_command} %* \
   rm -f %{?buildroot:%{buildroot}}$MPI_ROOT/share/info/dir \
   rm -f %{?buildroot:%{buildroot}}$MPI_LIB/perl5/*/*/perllocal.pod \
-  find %{?buildroot:%{buildroot}}$MPI_ROOT -regex ".*\\.la$" | xargs rm -f -- \
-  find %{?buildroot:%{buildroot}}$MPI_ROOT -regex ".*\\.pyo$" | xargs rm -f -- \
   %{!?keepstatic:find %{?buildroot:%{buildroot}}$MPI_ROOT -regex ".*\\.a$" | xargs rm -f --} \
   chmod a+x %{?buildroot:%{buildroot}}$MPI_BIN/* || : \
   chmod a+x %{?buildroot:%{buildroot}}$MPI_LIB/* || :
@@ -455,8 +442,6 @@
   install %* \
   rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir \
   rm -f %{?buildroot:%{buildroot}}/usr/lib/perl5/*/*/perllocal.pod \
-  find %{?buildroot:%{buildroot}} -regex ".*\\.la$" | xargs rm -f -- \
-  find %{?buildroot:%{buildroot}} -regex ".*\\.pyo$" | xargs rm -f -- \
   [ -d %{?buildroot:%{buildroot}}/sbin ] && mkdir %{?buildroot:%{buildroot}}/usr/bin/  || : \
   [ -d %{?buildroot:%{buildroot}}/bin ] && mkdir %{?buildroot:%{buildroot}}/usr/bin/  || : \
   [ -d %{?buildroot:%{buildroot}}/usr/sbin ] && mkdir %{?buildroot:%{buildroot}}/usr/bin/  || : \
@@ -473,7 +458,6 @@
   [ -d %{?buildroot:%{buildroot}}/bin ] && rmdir %{?buildroot:%{buildroot}}/bin || : \
   chmod a+x %{?buildroot:%{buildroot}}/usr/lib32/* || : \
   chmod a+x %{?buildroot:%{buildroot}}/lib/* || : \
-  %{!?keepstatic:find %{?buildroot:%{buildroot}} -regex ".*\\.la$" | xargs rm -f --}   \
   %{!?keepstatic:find %{?buildroot:%{buildroot}} -regex ".*\\.a$" | xargs rm -f --}
 
 %install_info(:-:) \
@@ -501,20 +485,43 @@
 #	Expanded at end of %install scriptlet.
 #
 
-%__arch_install_post   /usr/lib/rpm/check-buildroot
+%__arch_install_post   %{_rpmconfigdir}/check-buildroot
+
+# Standard brp-macro naming:
+# convert all '-' in basename to '_', add two leading underscores.
+
+# brp macros from the 'rpm' project follow
+%__brp_compress %{_rpmconfigdir}/brp-compress %{?_prefix}
+#__brp_strip %{_rpmconfigdir}/brp-strip %{__strip}
+%__brp_strip %{!?__debug_package:%{_rpmconfigdir}/clr/brp-strip %{__strip}}
+#__brp_strip_comment_note %{_rpmconfigdir}/brp-strip-comment-note %{__strip} %{__objdump}
+%__brp_strip_comment_note %{_rpmconfigdir}/clr/brp-strip-comment-note %{__strip} %{__objdump}
+#__brp_strip_static_archive %{_rpmconfigdir}/brp-strip-static-archive %{__strip}
+%__brp_strip_static_archive %{_rpmconfigdir}/clr/brp-strip-static-archive %{__strip}
+%__brp_elfperms %{_rpmconfigdir}/brp-elfperms
+%__brp_remove_la_files %{_rpmconfigdir}/brp-remove-la-files
+
+# brp macros from the 'python-rpm-packaging' project follow
+#__brp_python_bytecompile %{_rpmconfigdir}/brp-python-bytecompile
+%__brp_python_bytecompile %{_rpmconfigdir}/clr/brp-python-bytecompile
+
+# brp macros specific to Clear Linux OS follow
+%__brp_strip_static_lto %{_rpmconfigdir}/clr/brp-strip-static-lto
+%__brp_remove_python_pyo %{_rpmconfigdir}/clr/brp-remove-python-pyo
+%__brp_set_epoch_timestamp %{_rpmconfigdir}/clr/brp-set-epoch-timestamp
+%__brp_java_repack_jars %{!?__jar_repack:%{_rpmconfigdir}/clr/brp-java-repack-jars}
 
 %__os_install_post    \
-    %{!?__debug_package:/usr/lib/rpm/clr/brp-strip %{__strip}} \
-    /usr/lib/rpm/clr/brp-strip-static-archive %{__strip} \
-    /usr/lib/rpm/clr/brp-strip-comment-note %{__strip} %{__objdump} \
-    /usr/lib/rpm/clr/brp-python-bytecompile "" "%{?_python_bytecompile_errors_terminate_build}" "%{?_python_bytecompile_extra}" \
-    /usr/lib/rpm/clr/brp-python-hardlink \
-    %{?py_reproducible_pyc_path:%{?__brp_fix_pyc_reproducibility} "%{py_reproducible_pyc_path}"} \
-    find %{buildroot} -print0 | xargs -0 touch -h -d "@${SOURCE_DATE_EPOCH:-1549052798 }" || : \
-    %{!?__jar_repack:/usr/lib/rpm/clr/brp-java-repack-jars} \
+    %{?__brp_strip} \
+    %{?__brp_strip_static_archive} \
+    %{?__brp_strip_comment_note} \
+    %{?__brp_python_bytecompile} \
+    %{?__brp_remove_python_pyo} \
+    %{?__brp_set_epoch_timestamp} \
+    %{?__brp_java_repack_jars} \
 %{nil}
 
-#    /usr/lib/rpm/clr/brp-implant-ident-static
+#    %{_rpmconfigdir}/clr/brp-implant-ident-static
 
 %__spec_install_post\
     %{!?keepinfodir:rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir} \
@@ -526,13 +533,13 @@
          mv %{?buildroot:%{buildroot}}/usr/share/mime/packages %{?buildroot:%{buildroot}}/usr/share/mime-packages \
          rm -rf %{?buildroot:%{buildroot}}/usr/share/mime \
     fi\
-    RPM_XARGS_PFLAG=-P`getconf _NPROCESSORS_ONLN` \
+    RPM_XARGS_PFLAG=-P%{_smp_build_ncpus} \
     (find %{buildroot} -name "*.so.avx512" -print0; find %{buildroot}/usr/lib64/haswell/avx512_1 -name "*.so*" -print0) | \\\
         xargs -0rtn1 $RPM_XARGS_PFLAG python /usr/share/clr-avx-tools/avxjudge.py -q -5 \
     (find %{buildroot} -name "*.so.avx2" -print0; find %{buildroot}/usr/lib64/haswell \! -path "/usr/lib64/haswell/avx512_1/*" -name "*.so*" -print0) | \\\
         xargs -0rtn1 $RPM_XARGS_PFLAG python /usr/share/clr-avx-tools/avxjudge.py -q -2 \
     find %{buildroot}/usr/lib32/ %{buildroot}/usr/lib64/ -maxdepth 8 -name '*.so*' -type f -print0 | \\\
-       xargs -0rtn1 $RPM_XARGS_PFLAG /usr/lib/rpm/clr/brp-create-abi | sort -u > "%{_builddir}/%{?buildsubdir}"/abifiles.list\
+       xargs -0rtn1 $RPM_XARGS_PFLAG %{_rpmconfigdir}/clr/brp-create-abi | sort -u > "%{_builddir}/%{?buildsubdir}"/abifiles.list\
     %{?__debug_package:%{__debug_install_post}}\
     [ -d  %{?buildroot:%{buildroot}}/usr/lib/debug ] && mkdir -p  %{?buildroot:%{buildroot}}/usr/share || : \
     [ -d  %{?buildroot:%{buildroot}}/usr/lib/debug ] && mv  %{?buildroot:%{buildroot}}/usr/lib/debug  %{?buildroot:%{buildroot}}/usr/share || : \
@@ -545,20 +552,36 @@
 
 
 #	Template for debug information sub-package.
-# NOTE: This is a copy from rpm to get the ifnarch noarch fix, it can be removed later
-%debug_package \
-%ifnarch noarch\
-%global __debug_package 1\
-%package debuginfo \
+%_debuginfo_template \
+%package debuginfo\
 Summary: Debug information for package %{name}\
 Group: Development/Debug\
-AutoReqProv: 0\
+AutoReq: 0\
+AutoProv: 1\
 %description debuginfo\
 This package provides debug information for package %{name}.\
 Debug information is useful when developing applications that use this\
 package or when debugging this package.\
 %files debuginfo -f debugfiles.list\
-%defattr(-,root,root)\
+%{nil}
+
+%_debugsource_template \
+%package debugsource\
+Summary: Debug sources for package %{name}\
+Group: Development/Debug\
+AutoReqProv: 0\
+%description debugsource\
+This package provides debug sources for package %{name}.\
+Debug sources are useful when developing applications that use this\
+package or when debugging this package.\
+%files debugsource -f debugsourcefiles.list\
+%{nil}
+
+%debug_package \
+%ifnarch noarch\
+%global __debug_package 1\
+%_debuginfo_template\
+%{?_debugsource_packages:%_debugsource_template}\
 %endif\
 %{nil}
 
@@ -585,8 +608,9 @@ export LANG\
 LANG=en_US.UTF-8\
 export LANG\
 unset PYTHONOPTIMIZE \
+FFLAGS="${FFLAGS:-%optflags -I%_fmoddir}" ; export FFLAGS ; \
 LD_AS_NEEDED=1; export LD_AS_NEEDED ; \
-PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig; export PKG_CONFIG_LIBDIR ; \
+PKG_CONFIG_LIBDIR="/usr/lib64/pkgconfig:/usr/share/pkgconfig"; export PKG_CONFIG_LIBDIR ; \
 PATH="/usr/lib64/ccache/bin:/usr/local/cuda/bin:/usr/nvidia/bin:/usr/bin/haswell:/usr/bin:/usr/sbin"; export PATH ; \
 %{nil}
 
@@ -611,7 +635,7 @@ unset PYTHONOPTIMIZE \
 rm -rf %{?buildroot:%{buildroot}} \
 %{nil}
 
-%find_lang      /usr/lib/rpm/find-lang.sh %{buildroot}
+%find_lang      %{_rpmconfigdir}/find-lang.sh %{buildroot}
 
 #
 # use internal dep generator?
@@ -623,16 +647,6 @@ rm -rf %{?buildroot:%{buildroot}} \
 #
 # Should missing buildids terminate a build?
 %_missing_build_ids_terminate_build    0
-
-#
-## Should python bytecompilation errors terminate a build?
-%_python_bytecompile_errors_terminate_build 1
-## Should python bytecompilation compile outside python specific directories?
-%_python_bytecompile_extra 0
-##
-%__brp_fix_pyc_reproducibility /usr/lib/rpm/clr/brp-fix-pyc-reproducibility
-#%py_reproducible_pyc_path 1
-#
 
 #
 # Should unpackaged files in a build root terminate a build?
@@ -651,10 +665,10 @@ posix.setenv("RPMBUILD_SOURCEDIR",rpm.expand("%?_sourcedir"));
 #%__find_provides        %{__set_helper_env}%{_rpmconfigdir}/clr/find-provides %name
 #%__find_requires        %{__set_helper_env}%{_rpmconfigdir}/clr/find-requires %name
 
-%__find_provides        /usr/lib/rpm/clr/find-provides
-%__find_requires        /usr/lib/rpm/clr/find-requires
+%__find_provides        %{_rpmconfigdir}/clr/find-provides
+%__find_requires        %{_rpmconfigdir}/clr/find-requires
 
-%__global_cflags	-g3 -ggdb -O3 --param=lto-max-streaming-parallelism=16 -march=native -mtune=native -fgraphite-identity -Wall -Wl,--as-needed -Wl,--build-id=sha1 -Wl,--enable-new-dtags -Wl,--hash-style=gnu -Wl,-O2 -Wl,-z,now,-z,relro,-z,max-page-size=0x1000,-z,separate-code -Wno-error -mprefer-vector-width=256 -falign-functions=32 -flimit-function-alignment -fasynchronous-unwind-tables -fdevirtualize-at-ltrans -floop-nest-optimize -floop-block -fno-math-errno -fno-semantic-interposition -Wl,-Bsymbolic-functions -fno-stack-protector -fno-trapping-math -ftree-loop-distribute-patterns -ftree-loop-vectorize -ftree-slp-vectorize -ftree-vectorize -fuse-ld=bfd -fuse-linker-plugin -malign-data=cacheline -feliminate-unused-debug-types -fipa-pta -flto=16 -fno-plt -mtls-dialect=gnu2 -Wl,-sort-common -Wno-error -Wp,-D_REENTRANT -pipe -ffat-lto-objects -fPIC -fomit-frame-pointer -fexceptions -static-libstdc++ -static-libgcc -Wl,--build-id=sha1
+%__global_cflags	-O3 -pipe -Wall -fexceptions -Wl,-z,now,-z,relro,-z,max-page-size=0x1000,-z,separate-code -Wno-error -Wl,--enable-new-dtags -Wl,--build-id=sha1
 
 
 # Disable lookups
@@ -825,5 +839,14 @@ install -D -m 644 %1-16.png $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/16x16/apps/
 %_binary_payload       w6.gzdio
 
 %__requires_filter /usr/nvidia:/usr/local/cuda:/aot/intel/oneapi
+#==============================================================================
+# ---- macros for compatibility
 
+# __perl was removed in rpm 4.15, and it is used by autospec's 'cpan' pattern.
+%__perl /usr/bin/perl
 %__gzip /usr/bin/pigz
+# __objcopy was removed in rpm 4.17, and it was previously passed as an
+# argument to Clear's 'brp-strip-static-lto' script. The script works okay at
+# the moment without arguments, but just in case that changes, keep this macro
+# defined.
+%__objcopy /usr/bin/objcopy
