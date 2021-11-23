@@ -233,7 +233,8 @@
 %scons_install \
   scons install \\\
     --prefix=%{_prefix} \\\
-    --libdir=%{_lib}
+    --libdir=%{_lib} \\\
+    V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}"
 
 %makeinstall \
   %{__make} \\\
@@ -250,6 +251,7 @@
 	sharedstatedir=%{?buildroot:%{buildroot}}%{_sharedstatedir} \\\
 	mandir=%{?buildroot:%{buildroot}}%{_mandir} \\\
 	infodir=%{?buildroot:%{buildroot}}%{_infodir} \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
   install
 
 %make_install_command() \
@@ -261,6 +263,7 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
   install %*
 
 %ninja_install_command() \
@@ -273,6 +276,7 @@
 	ninja \\\
 	--verbose \\\
 	%{?_smp_mflags:%{_smp_mflags}} \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
   install %*
 
 %configure_buildtcl \
@@ -302,6 +306,7 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
   install %*
 
 %buildtcl_script_install_command() \
@@ -377,6 +382,7 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
 	ninja --verbose \\\
 	%{?_smp_mflags:%{_smp_mflags}} \\\
   install %* \
@@ -439,6 +445,7 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
   install %* \
   rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir \
   rm -f %{?buildroot:%{buildroot}}/usr/lib/perl5/*/*/perllocal.pod \
