@@ -181,6 +181,54 @@
 	--disable-dependency-tracking \\\
 	%{?_disable_maintainer_mode: --disable-maintainer-mode}
 
+%autogen_simple \
+  CFLAGS="$CFLAGS" ; export CFLAGS ; \
+  CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
+  FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
+  FFLAGS="$FFLAGS" ; export FFLAGS ; \
+  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
+  LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
+  AR="$AR" ; export AR ; \
+  RANLIB="$RANLIB" ; export RANLIB ; \
+  NM="$NM" ; export NM ; \
+  NOCONFIGURE="noconfigure"; export NOCONFIGURE ; \
+  sh ./autogen.sh --prefix=%{_prefix} \\\
+	--exec-prefix=%{_exec_prefix} \\\
+	--bindir=%{_bindir} \\\
+	--sbindir=%{_bindir} \\\
+	--sysconfdir=%{_sysconfdir} \\\
+	--datadir=%{_datadir} \\\
+	--includedir=%{_includedir} \\\
+	--libdir=%{_libdir} \\\
+	--libexecdir=%{_libexecdir} \\\
+	--localstatedir=%{_localstatedir} \\\
+	--sharedstatedir=%{_sharedstatedir} \\\
+	--mandir=%{_mandir} \\\
+	--infodir=%{_infodir} \\\
+	--disable-gcc-warnings \\\
+	--disable-dependency-tracking \\\
+	%{?_disable_maintainer_mode: --disable-maintainer-mode} || : \
+  [ "%{_lto_cflags}"x != x ] && %{_fix_broken_configure_for_lto}; \
+  ./configure --build=%{_build} --host=%{_host} \\\
+	--target=%{_target_platform} \\\
+	--program-prefix=%{?_program_prefix} \\\
+	--prefix=%{_prefix} \\\
+	--exec-prefix=%{_exec_prefix} \\\
+	--bindir=%{_bindir} \\\
+	--sbindir=%{_bindir} \\\
+	--sysconfdir=%{_sysconfdir} \\\
+	--datadir=%{_datadir} \\\
+	--includedir=%{_includedir} \\\
+	--libdir=%{_libdir} \\\
+	--libexecdir=%{_libexecdir} \\\
+	--localstatedir=%{_localstatedir} \\\
+	--sharedstatedir=%{_sharedstatedir} \\\
+	--mandir=%{_mandir} \\\
+	--infodir=%{_infodir} \\\
+	--disable-gcc-warnings \\\
+	--disable-dependency-tracking \\\
+	%{?_disable_maintainer_mode: --disable-maintainer-mode}
+
 %waf \
   CFLAGS="$CFLAGS" ; export CFLAGS ; \
   CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
