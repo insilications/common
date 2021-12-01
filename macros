@@ -852,6 +852,7 @@ install -D -m 644 %1-16.png $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/16x16/apps/
 # __perl was removed in rpm 4.15, and it is used by autospec's 'cpan' pattern.
 %__perl /usr/bin/perl
 %__gzip /usr/bin/pigz
+%__bzip2 /usr/bin/lbzip2
 # __objcopy was removed in rpm 4.17, and it was previously passed as an
 # argument to Clear's 'brp-strip-static-lto' script. The script works okay at
 # the moment without arguments, but just in case that changes, keep this macro
