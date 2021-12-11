@@ -259,6 +259,10 @@
     -DCMAKE_INSTALL_PREFIX=%{_prefix} \\\
     -DCMAKE_INSTALL_SBINDIR=%{_sbindir} \\\
     -DCMAKE_INSTALL_LIBDIR=%{_libdir} -DLIB_INSTALL_DIR=%{_libdir} -DLIB_SUFFIX=64 \\\
+    -DCMAKE_INSTALL_SYSCONFDIR=/usr/share \\\
+    -DCMAKE_C_FLAGS_RELEASE:STRING="-pipe" \\\
+    -DCMAKE_CXX_FLAGS_RELEASE:STRING="-pipe" \\\
+    -DCMAKE_ASM_FLAGS_RELEASE:STRING="-pipe" \\\
     -DCMAKE_NM=/usr/bin/gcc-nm \\\
     -DCMAKE_AR=/usr/bin/gcc-ar \\\
     -DCMAKE_BUILD_TYPE="None" \\\
