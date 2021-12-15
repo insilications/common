@@ -232,16 +232,18 @@
 %waf \
   CFLAGS="$CFLAGS" ; export CFLAGS ; \
   CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
-  FFLAGS="${FFLAGS:-I%_fmoddir}" ; export FFLAGS ; \
+  FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
+  FFLAGS="$FFLAGS" ; export FFLAGS ; \
+  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
   LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
+  LINKFLAGS="$LDFLAGS" ; export LINKFLAGS ; \
   AR="$AR" ; export AR ; \
   RANLIB="$RANLIB" ; export RANLIB ; \
   NM="$NM" ; export NM ; \
   ./waf configure \\\
 	--prefix=%{_prefix} \\\
-	--exec-prefix=%{_exec_prefix} \\\
 	--bindir=%{_bindir} \\\
-	--sbindir=%{_bindir} \\\
+	--configdir=/usr/share \\\
 	--sysconfdir=%{_sysconfdir} \\\
 	--datadir=%{_datadir} \\\
 	--includedir=%{_includedir} \\\
@@ -286,7 +288,7 @@
   scons install \\\
     --prefix=%{_prefix} \\\
     --libdir=%{_lib} \\\
-    V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}"
+    V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}"
 
 %makeinstall \
   %{__make} \\\
@@ -303,7 +305,7 @@
 	sharedstatedir=%{?buildroot:%{buildroot}}%{_sharedstatedir} \\\
 	mandir=%{?buildroot:%{buildroot}}%{_mandir} \\\
 	infodir=%{?buildroot:%{buildroot}}%{_infodir} \\\
-	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" \\\
   install
 
 %make_install_command() \
@@ -315,7 +317,7 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
-	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" \\\
   install %*
 
 %ninja_install_command() \
@@ -328,7 +330,7 @@
 	ninja \\\
 	--verbose \\\
 	%{?_smp_mflags:%{_smp_mflags}} \\\
-	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" \\\
   install %*
 
 %configure_buildtcl \
@@ -358,7 +360,7 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
-	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" \\\
   install %*
 
 %buildtcl_script_install_command() \
@@ -434,7 +436,7 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
-	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" \\\
 	ninja --verbose \\\
 	%{?_smp_mflags:%{_smp_mflags}} \\\
   install %* \
@@ -488,6 +490,15 @@
   chmod a+x %{?buildroot:%{buildroot}}$MPI_BIN/* || : \
   chmod a+x %{?buildroot:%{buildroot}}$MPI_LIB/* || :
 
+%waf_install() \
+  %{waf_install_command} %* \
+  %{make_install_common}
+
+%waf_install_command() \
+  ./waf --verbose --destdir=%{?buildroot:%{buildroot}} \\\
+	DESTDIR=%{?buildroot:%{buildroot}} \\\
+  install %*
+
 %make_install32() \
   %{__make} \\\
 	%{?_smp_mflags:%{_smp_mflags}} \\\
@@ -497,7 +508,7 @@
 	BUILDROOT=%{?buildroot:%{buildroot}} \\\
 	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
 	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
-	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="${LIBS_GENERATE}" \\\
+	V=1 VERBOSE=1 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" \\\
   install %* \
   rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir \
   rm -f %{?buildroot:%{buildroot}}/usr/lib/perl5/*/*/perllocal.pod \
