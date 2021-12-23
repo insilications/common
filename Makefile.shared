@@ -131,7 +131,7 @@ localrepoenable: $(TOPLVL)/repo
 	mock_new=$$(mktemp -p $< clear.cfg.XXXXXXX); \
 	mock_orig=$</clear.cfg; \
 	cp ${PM_CONF} $$pm_new; \
-	printf "\n\n[localrepo]\nname=localrepo\nenabled=1\ngpgcheck=0\npriority=1\nmetadata_expire=1\ncost=1\nmax_parallel_downloads=5\n" >> $$pm_new; \
+	printf "\n\n[localrepo]\nname=localrepo\nfailovermethod=priority\nenabled=1\ngpgcheck=0\npriority=1\nmax_parallel_downloads=20\n" >> $$pm_new; \
 	printf "baseurl=file://$$(realpath $<)/\n\n" >> $$pm_new; \
 	if ! cmp -s $$pm_new $$pm_orig; then \
 		flock $</repo.lock mv $$pm_new $$pm_orig; \
@@ -139,7 +139,7 @@ localrepoenable: $(TOPLVL)/repo
 	rm -f $$pm_new; \
 	cp ${MOCK_CONF} $$mock_new; \
 	sed -i '$$d' $$mock_new; \
-	printf "\n\n[localrepo]\nname=localrepo\nenabled=1\ngpgcheck=0\npriority=1\nmetadata_expire=1\ncost=1\nmax_parallel_downloads=5\n" >> $$mock_new; \
+	printf "\n\n[localrepo]\nname=localrepo\nfailovermethod=priority\nenabled=1\ngpgcheck=0\npriority=1\nmax_parallel_downloads=20\n" >> $$mock_new; \
 	printf "baseurl=file://$$(realpath $<)/\n\n" >> $$mock_new; \
 	sed -i '$$a"""' $$mock_new; \
 	if ! cmp -s $$mock_new $$mock_orig; then \
