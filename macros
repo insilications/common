@@ -73,7 +73,6 @@
   CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
   FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
   FFLAGS="$FFLAGS" ; export FFLAGS ; \
-  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
   LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
   AR="$AR" ; export AR ; \
   RANLIB="$RANLIB" ; export RANLIB ; \
@@ -103,7 +102,6 @@
   CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
   FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
   FFLAGS="$FFLAGS" ; export FFLAGS ; \
-  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
   LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
   AR="$AR" ; export AR ; \
   RANLIB="$RANLIB" ; export RANLIB ; \
@@ -135,7 +133,6 @@
   CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
   FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
   FFLAGS="$FFLAGS" ; export FFLAGS ; \
-  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
   LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
   AR="$AR" ; export AR ; \
   RANLIB="$RANLIB" ; export RANLIB ; \
@@ -186,7 +183,6 @@
   CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
   FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
   FFLAGS="$FFLAGS" ; export FFLAGS ; \
-  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
   LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
   AR="$AR" ; export AR ; \
   RANLIB="$RANLIB" ; export RANLIB ; \
@@ -234,7 +230,6 @@
   CXXFLAGS="$CXXFLAGS" ; export CXXFLAGS ; \
   FCFLAGS="$FCFLAGS" ; export FCFLAGS ; \
   FFLAGS="$FFLAGS" ; export FFLAGS ; \
-  CFFLAGS="$CFFLAGS" ; export CFFLAGS ; \
   LDFLAGS="$LDFLAGS" ; export LDFLAGS ; \
   LINKFLAGS="$LDFLAGS" ; export LINKFLAGS ; \
   AR="$AR" ; export AR ; \
