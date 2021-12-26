@@ -673,10 +673,9 @@ export LANG\
 LANG=en_US.UTF-8\
 export LANG\
 unset PYTHONOPTIMIZE \
-FFLAGS="${FFLAGS:-%optflags -I%_fmoddir}" ; export FFLAGS ; \
 LD_AS_NEEDED=1; export LD_AS_NEEDED ; \
 PKG_CONFIG_LIBDIR="/usr/lib64/pkgconfig:/usr/share/pkgconfig"; export PKG_CONFIG_LIBDIR ; \
-PATH="/usr/lib64/ccache/bin:/usr/local/cuda/bin:/usr/nvidia/bin:/usr/bin/haswell:/usr/bin:/usr/sbin"; export PATH ; \
+PATH="/usr/lib64/ccache/bin:/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/bin/haswell:/usr/bin:/usr/sbin"; export PATH ; \
 %{nil}
 
 %install %{?_enable_debug_packages:%{?buildsubdir:%{debug_package}}}\
@@ -685,7 +684,7 @@ PATH="/usr/lib64/ccache/bin:/usr/local/cuda/bin:/usr/nvidia/bin:/usr/bin/haswell
 LANG=en_US.UTF-8\
 export LANG\
 unset PYTHONOPTIMIZE \
-PATH="/usr/lib64/ccache/bin:/usr/local/cuda/bin:/usr/nvidia/bin:/usr/bin/haswell:/usr/bin:/usr/sbin"; export PATH ; \
+PATH="/usr/lib64/ccache/bin:/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/bin/haswell:/usr/bin:/usr/sbin"; export PATH ; \
 rm -rf %{?buildroot:%{buildroot}} \
 mkdir -p %{?buildroot:%{buildroot}} \
 %{nil}
@@ -903,7 +902,8 @@ install -D -m 644 %1-16.png $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/16x16/apps/
 %_source_payload       w0.gzdio
 %_binary_payload       w6.gzdio
 
-%__requires_filter /usr/nvidia:/usr/local/cuda:/aot/intel/oneapi
+%__requires_filter /usr/local/nvidia:/usr/local/cuda:/aot/intel/oneapi
+
 #==============================================================================
 # ---- macros for compatibility
 

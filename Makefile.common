@@ -258,8 +258,10 @@ autospecprep:
 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep"
 
 #help autospecnogit: Runs autospecnogit with short-circuit=prep and --cache-alterations
-autospecprep-update-root-cache:
-	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep --cache-alterations"
+# autospecprep-update-root-cache:
+# 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep --cache-alterations"
+update-root-cache:
+	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --cache-alterations
 
 #help autospecnogit: Runs autospecnogit with short-circuit=build
 autospecbuild:
@@ -278,8 +280,10 @@ autospecprepccache:
 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep"
 
 #help autospecnogit: Runs autospecnogit with short-circuit=prep --cache-alterations and ccache enabled
-autospecprepccache-update-root-cache:
-	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep --cache-alterations"
+# autospecprepccache-update-root-cache:
+# 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep --cache-alterations"
+update-root-cache-ccache:
+	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --cache-alterations
 
 #help autospecnogit: Runs autospecnogit with short-circuit=build and ccache enabled
 autospecbuildccache:
