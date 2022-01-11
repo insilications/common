@@ -218,6 +218,7 @@ autospec: preautospec-checks clean-old-content
 		$${REDO_AR:+ --redownload_archive} \
 		$${DISABLE_SM:+ --disable_submodule $${DISABLE_SM}} \
 		$${FORCE_FC:+ --force_fullclone $${FORCE_FC}} \
+		$${FILE_RESTART:+ --do_file_restart} \
 		$${DEBUG:+ --debug} \
 		$(firstword $(NEWURL) $(URL));
 	@if [[ "$${MOCK_OPTS}" == *"short-circuit=prep"* ]]; then \
@@ -270,6 +271,10 @@ autospecbuild:
 #help autospecnogit: Runs autospecnogit with short-circuit=install
 autospecinstall:
 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=install"
+
+#help autospecnogit: Runs autospecnogit with short-circuit=install and no file_restart mechanism
+autospecinstallnofilerestart:
+	$(MAKE) autospec SKIP_GIT=1 FILE_RESTART=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=install"
 
 #help autospecnogit: Runs build with short-circuit=binary
 autospecbinary:
