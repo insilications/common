@@ -221,15 +221,6 @@ autospec: preautospec-checks clean-old-content
 		$${FILE_RESTART:+ --do_file_restart} \
 		$${DEBUG:+ --debug} \
 		$(firstword $(NEWURL) $(URL));
-	@if [[ "$${MOCK_OPTS}" == *"short-circuit=prep"* ]]; then \
-		exit 0; \
-	elif [[ "$${MOCK_OPTS}" == *"short-circuit=build"* ]]; then \
-		exit 0; \
-	elif [[ "$${MOCK_OPTS}" == *"short-circuit=install"* ]]; then \
-		exit 0; \
-	else \
-		$(MAKE) link-new-rpms PKG_REPO_DIR="."; \
-	fi
 # 	@$(MAKE) spdxcheck
 # 	@$(MAKE) checkblacklist
 # 	@if [ -e update_changelog.sh ] && [ -z "$$SKIP_GIT" ] ; then \
