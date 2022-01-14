@@ -916,3 +916,11 @@ install -D -m 644 %1-16.png $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/16x16/apps/
 # the moment without arguments, but just in case that changes, keep this macro
 # defined.
 %__objcopy /usr/bin/objcopy
+
+# Minimize writes during transactions (at the cost of more reads) to
+# conserve eg SSD disks (EXPERIMENTAL).
+# 1			enable
+# 0 			disable
+# -1 (or undefined)	autodetect on platforms where supported, otherwise
+# 			default to disabled
+%_minimize_writes 1
