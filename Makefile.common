@@ -43,11 +43,14 @@ ALL_STATICDEV_RPM = $(wildcard ../../repo/*staticdev-*.rpm)
 ALL_IGNORE_CUDA_RPM = $(wildcard ../../repo/cuda-*.rpm)
 ALL_IGNORE_NVIDIA_RPM = $(wildcard ../../repo/nvidia-*.rpm)
 
-WITH_SUDO = $(shell cmp /usr/bin/mock /usr/sbin/mock &> /dev/null && echo sudo )
-
 # MOCK_CONFIG_VAL is set in Makefile.shared
 MOCK_SMP_FLAGS=$(patsubst -j%, -D_smp_mflags\ -j%,$(filter -j%, $(MAKEFLAGS)))
-MOCK ?= $(WITH_SUDO) PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' /usr/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
+
+ifeq ($(PYTHON_URL),/home/boni/.local/pypy-venv/bin/python)
+MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so /home/boni/.local/pypy-venv/bin/python /home/boni/.local/pypy-venv/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
+else
+MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' /usr/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
+endif
 
 ifneq ($(wildcard upstream),)
 __allsources := $(notdir $(strip $(shell cat upstream)))
