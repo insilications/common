@@ -47,7 +47,7 @@ ALL_IGNORE_NVIDIA_RPM = $(wildcard ../../repo/nvidia-*.rpm)
 MOCK_SMP_FLAGS=$(patsubst -j%, -D_smp_mflags\ -j%,$(filter -j%, $(MAKEFLAGS)))
 
 ifeq ($(PYTHON_URL),/home/boni/.local/pypy-venv/bin/python)
-MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so /home/boni/.local/pypy-venv/bin/python /home/boni/.local/pypy-venv/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
+MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so /home/boni/.local/pypy-venv/bin/python --jit max_unroll_recursion=16,disable_unrolling=300 /home/boni/.local/pypy-venv/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
 else
 MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' /usr/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
 endif
@@ -645,11 +645,13 @@ install-local:
 	$(eval NO_LIB32_RPM := $(filter-out ${LIB32_RPM},${NO_DEBUGINFO_RPMS}))
 	$(eval NO_DEV32_RPM := $(filter-out ${DEV32_RPM},${NO_LIB32_RPM}))
 	$(eval NO_STATICDEV32_RPM := $(filter-out ${STATICDEV32_RPM},${NO_DEV32_RPM}))
-	@for r in $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}); do \
-		echo -n "Installing $$r... "; \
-		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
-		echo "done"; \
-	done
+	$(eval NO_ABI_RPM := $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}))
+	@sudo rpm -Uvh --force --nosignature --nosignature --noscripts --nodeps $(NO_ABI_RPM); \
+# 	@for r in $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}); do \
+# 		echo -n "Installing $$r... "; \
+# 		sudo rpm -Uvh --force --nosignature --nosignature --noscripts --nodeps $$r; \
+# 		echo "done"; \
+# 	done
 	@$(MAKE) -s install-debuginfo-local; \
 	sudo ldconfig;
 
