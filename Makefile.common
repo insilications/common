@@ -23,6 +23,7 @@ SPECFILE = $(addsuffix .spec, $(PKG_NAME))
 SRPMVERS = $(shell [ ! -f $(SPECFILE) ] || $(call queryspec,%{NVR}\n,$(SPECFILE)))
 SRPMFILE = results/$(SRPMVERS).src.rpm
 
+RESULTS_RPMS = $(wildcard results/*.rpm)
 LATEST_RPMS = $(wildcard rpms/*.rpm)
 DEBUGINFO_RPM = $(wildcard rpms/${PKG_NAME}-debuginfo-$(shell $(call queryspec,%{V}-%{R},${SPECFILE})).*.rpm)
 RPMS ?= $(LATEST_RPMS)
@@ -31,6 +32,7 @@ DEV32_RPM = $(wildcard rpms/*dev32-*.rpm)
 STATICDEV32_RPM = $(wildcard rpms/*staticdev32-*.rpm)
 ABI_RPM = $(wildcard rpms/*-abi-*.rpm)
 STATICDEV_RPM = $(wildcard rpms/*staticdev-*.rpm)
+SRC_RPM = $(wildcard rpms/*.src.rpm)
 
 ALL_LATEST_RPMS = $(wildcard ../../repo/*.rpm)
 ALL_DEBUGINFO_RPM = $(wildcard ../../repo/*debuginfo-*.rpm)
@@ -40,8 +42,6 @@ ALL_DEV32_RPM = $(wildcard ../../repo/*dev32-*.rpm)
 ALL_STATICDEV32_RPM = $(wildcard ../../repo/*staticdev32-*.rpm)
 ALL_ABI_RPM = $(wildcard ../../repo/*-abi-*.rpm)
 ALL_STATICDEV_RPM = $(wildcard ../../repo/*staticdev-*.rpm)
-ALL_IGNORE_CUDA_RPM = $(wildcard ../../repo/cuda-*.rpm)
-ALL_IGNORE_NVIDIA_RPM = $(wildcard ../../repo/nvidia-*.rpm)
 
 # MOCK_CONFIG_VAL is set in Makefile.shared
 MOCK_SMP_FLAGS=$(patsubst -j%, -D_smp_mflags\ -j%,$(filter -j%, $(MAKEFLAGS)))
@@ -203,7 +203,6 @@ autospec: preautospec-checks clean-old-content
 	@printf 'PKG_NAME := %s\nURL = %s\nARCHIVES = %s\nARCHIVES_GIT = %s\n\ninclude ../common/Makefile.common\n' $(PKG_NAME) '$(firstword $(value NEWURL) $(value URL))' '$(value ARCHIVES)' '$(value ARCHIVES_GIT)' > Makefile
 	$(PYTHON) $(TOPLVL)/projects/autospec/autospec/autospec.py \
 		--target . \
-		--integrity \
 		--config "$(AUTOSPEC_CONF)" \
 		--name $(PKG_NAME) \
 		--archives $(ARCHIVES) \
@@ -214,7 +213,7 @@ autospec: preautospec-checks clean-old-content
 		$${NON_INTERACTIVE:+ --non_interactive} \
 		$${SKIP_GIT:+ --skip-git} \
 		$${SKIP_BUMP:+ --skip-bump} \
-		$(AUTOSPEC_CLEANUP_OPT) \
+		$${CLEANUP:+ -C} \
 		$${FG:+ --download_from_git $${FG}} \
 		$${REDO_GIT:+ --redownload_from_git} \
 		$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
@@ -244,13 +243,23 @@ for-review.txt:
 	git diff | grep -q index || python3 $(TOPLVL)/projects/common/patchfilter.py > for-review.txt
 .PHONY: for-review.txt
 
+# ifeq (,$(filter $(firstword $(MAKECMDGOALS)),installit autospecprep))
+ifeq (installit,$(firstword $(MAKECMDGOALS)))
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
+.PHONY: installit
+
 #help autospecnogit: Runs autospec, but does not create a commit
 autospecnogit:
 	$(MAKE) autospec SKIP_GIT=1
 
 #help autospecnogit: Runs autospecnogit with short-circuit=prep
 autospecprep:
-	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep"
+	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="$(MOCK_OPTS) --short-circuit=prep"
+# 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --config-opts=basedir=/aot/var/lib/mock --disable-plugin=ccache --short-circuit=prep"
 
 #help autospecnogit: Runs autospecnogit with short-circuit=prep and --cache-alterations
 # autospecprep-update-root-cache:
@@ -260,19 +269,19 @@ update-root-cache:
 
 #help autospecnogit: Runs autospecnogit with short-circuit=build
 autospecbuild:
-	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=build"
+	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="$(MOCK_OPTS) --short-circuit=build"
 
 #help autospecnogit: Runs autospecnogit with short-circuit=install
 autospecinstall:
-	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=install"
+	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="$(MOCK_OPTS) --short-circuit=install"
 
 #help autospecnogit: Runs autospecnogit with short-circuit=install and no file_restart mechanism
 autospecinstallnofilerestart:
-	$(MAKE) autospec SKIP_GIT=1 FILE_RESTART=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=install"
+	$(MAKE) autospec SKIP_GIT=1 FILE_RESTART=1 MOCK_OPTS="$(MOCK_OPTS) --short-circuit=install"
 
 #help autospecnogit: Runs build with short-circuit=binary
 autospecbinary:
-	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=binary"
+	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="$(MOCK_OPTS) --short-circuit=binary"
 
 #help autospecnogit: Runs autospecnogit with short-circuit=prep and ccache enabled
 autospecprepccache:
@@ -316,7 +325,8 @@ updateit:
 	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --update
 
 installit:
-	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --install $(filter-out $@,$(MAKECMDGOALS))
+# 	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --install $(filter-out $@,$(MAKECMDGOALS))
+	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --install $(RUN_ARGS)
 
 #help autospecnostate: Runs autospec, but cleans up mock chroots
 #help and disables interactive mode.
@@ -523,34 +533,21 @@ logcheck:
 #help repository. If this repository does not yet exist, it is created and
 #help enabled.
 repoadd: $(TOPLVL)/repo
-	@if [ -z "${LATEST_RPMS}" ]; then \
+	$(eval NO_SRC_RPM := $(filter-out ${SRC_RPM},${LATEST_RPMS}))
+	@if [ -z "${NO_SRC_RPM}" ]; then \
 		echo "No rpms found in rpms/ directory."; \
 		exit 1; \
 	fi
-	$(MAKE) -s repodel NO_CREATEREPO=1
+	@$(MAKE) -s repodel NO_CREATEREPO=1
 	@echo "Adding new rpms:"; \
-	for rpm in ${LATEST_RPMS}; do \
+	for rpm in ${NO_SRC_RPM}; do \
 		echo "+$${rpm#rpms/}"; \
 		echo "$${rpm#rpms/}" >> .repo-index; \
 	done; \
-	flock $</repo.lock ln -f -t $< ${LATEST_RPMS}
-	$(MAKE) -s localrepocreate
-	$(MAKE) -s localrepoenable
-
-#help repostage: Stages locally-built RPMs for this package to the local RPM
-#help directory. If this directory does not yet exist, it is created and
-#help enabled.
-repostage: $(TOPLVL)/repo
-	@if [ -z "${LATEST_RPMS}" ]; then \
-		echo "No rpms found in rpms/ directory."; \
-		exit 1; \
-	fi
-	$(MAKE) -s repodel NO_CREATEREPO=1
-	@for r in ${LATEST_RPMS}; do \
-		echo "+$${rpm#rpms/}"; \
-		echo "$${rpm#rpms/}" >> .repo-index; \
-	done; \
-	flock $</repo.lock ln -f -t $< ${LATEST_RPMS}
+	flock $</repo.lock ln -f -t $< ${NO_SRC_RPM}
+	@$(MAKE) -s localrepocreate
+	@$(MAKE) -s localrepoenable
+	@$(MAKE) -s repoaddsrc
 
 #help repodel: Removes RPMs from the local RPM repository that were
 #help previously added by 'make repoadd' for this package.
@@ -567,6 +564,55 @@ repodel: $(TOPLVL)/repo
 			$(MAKE) -s localrepocreate; \
 		fi; \
 	fi
+	@$(MAKE) -s repodelsrc
+
+#help repoadd: Adds locally-built src RPMs for this package to the local RPM
+#help repository. If this repository does not yet exist, it is created and
+#help enabled.
+repoaddsrc: $(TOPLVL)/reposrc
+	@if [ -z "${SRC_RPM}" ]; then \
+		echo "No src rpms found in rpms/ directory."; \
+		exit 1; \
+	fi
+	@$(MAKE) -s repodelsrc NO_CREATEREPO=1
+	@echo "Adding new src rpms:"; \
+	for rpm in ${SRC_RPM}; do \
+		echo "+$${rpm#rpms/}"; \
+		echo "$${rpm#rpms/}" >> .reposrc-index; \
+	done; \
+	flock $</repo.lock ln -f -t $< ${SRC_RPM}
+	@$(MAKE) -s localrepocreatesrc
+
+#help repodel: Removes src RPMs from the local RPM repository that were
+#help previously added by 'make repoadd' for this package.
+repodelsrc: $(TOPLVL)/reposrc
+	@if [ -f .reposrc-index ]; then \
+		echo "Cleaning old src rpms:"; \
+		mapfile -t rpms < <(sed 's|.*|$</&|' .reposrc-index); \
+		for rpm in "$${rpms[@]}"; do \
+			echo "-$${rpm#$</}"; \
+		done < .reposrc-index; \
+		flock $</repo.lock rm -f "$${rpms[@]}"; \
+		rm .reposrc-index; \
+		if [ -z "$$NO_CREATEREPO" ]; then \
+			$(MAKE) -s localrepocreatesrc; \
+		fi; \
+	fi
+
+#help repostage: Stages locally-built RPMs for this package to the local RPM
+#help directory. If this directory does not yet exist, it is created and
+#help enabled.
+repostage: $(TOPLVL)/repo
+	@if [ -z "${LATEST_RPMS}" ]; then \
+		echo "No rpms found in rpms/ directory."; \
+		exit 1; \
+	fi
+	$(MAKE) -s repodel NO_CREATEREPO=1
+	@for r in ${LATEST_RPMS}; do \
+		echo "+$${rpm#rpms/}"; \
+		echo "$${rpm#rpms/}" >> .repo-index; \
+	done; \
+	flock $</repo.lock ln -f -t $< ${LATEST_RPMS}
 
 #help repoenable: Enables the local RPM repository for use with Yum/DNF and
 #help Mock. If this repository does not yet exist, it is created.
@@ -640,20 +686,27 @@ install-debuginfo-local:
 
 #help install-local: Install locally built RPMs to the root filesystem. Note that the
 #help debuginfo RPM installs to /var/cache/debuginfo
+# 	@for r in $(NO_ABI_RPM); do \
+# 		echo -n "Installing $$r... "; \
+# 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
+# 		echo "done"; \
+# 	done
+# 	@$(MAKE) -s install-debuginfo-local; \
+# 	sudo ldconfig;
+# 	@sudo rpm -Uvh --force --noverify --noscripts --nodeps $(NO_ABI_RPM)
+# 	@$(MAKE) -s install-debuginfo-local
+# 	@sudo ldconfig
 install-local:
 	$(eval NO_DEBUGINFO_RPMS := $(filter-out ${DEBUGINFO_RPM},${RPMS}))
 	$(eval NO_LIB32_RPM := $(filter-out ${LIB32_RPM},${NO_DEBUGINFO_RPMS}))
 	$(eval NO_DEV32_RPM := $(filter-out ${DEV32_RPM},${NO_LIB32_RPM}))
 	$(eval NO_STATICDEV32_RPM := $(filter-out ${STATICDEV32_RPM},${NO_DEV32_RPM}))
 	$(eval NO_ABI_RPM := $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}))
-	@sudo rpm -Uvh --force --nosignature --nosignature --noscripts --nodeps $(NO_ABI_RPM); \
-# 	@for r in $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}); do \
-# 		echo -n "Installing $$r... "; \
-# 		sudo rpm -Uvh --force --nosignature --nosignature --noscripts --nodeps $$r; \
-# 		echo "done"; \
-# 	done
-	@$(MAKE) -s install-debuginfo-local; \
-	sudo ldconfig;
+	@sudo rpm -Uvh --force --noverify --noscripts --nodeps $(NO_ABI_RPM)
+	@$(MAKE) -s install-debuginfo-local
+	@sudo ldconfig
+	@sudo systemctl daemon-reload
+	@systemctl --user daemon-reload
 
 #help install-local-repo-all: Install all locally built RPMs to the root filesystem.
 install-local-all-repo:
@@ -669,7 +722,9 @@ install-local-all-repo:
 		echo "done"; \
 	done
 	@$(MAKE) -s install-debuginfo-local; \
-	sudo ldconfig;
+	sudo ldconfig; \
+	sudo systemctl daemon-reload; \
+	systemctl --user daemon-reload;
 
 #help install-local: Install locally built RPMs to the root filesystem. Note that the
 #help debuginfo RPM installs to /var/cache/debuginfo
@@ -685,7 +740,9 @@ install-local-no-static:
 		echo "done"; \
 	done
 	@$(MAKE) -s install-debuginfo-local; \
-	sudo ldconfig;
+	sudo ldconfig; \
+	sudo systemctl daemon-reload; \
+	systemctl --user daemon-reload;
 
 #help install-local: Install locally built RPMs to the root filesystem. Note that the
 #help debuginfo RPM installs to /var/cache/debuginfo
@@ -696,7 +753,9 @@ install-local-all:
 		echo "done"; \
 	done
 	@$(MAKE) -s install-debuginfo-local; \
-	sudo ldconfig;
+	sudo ldconfig; \
+	sudo systemctl daemon-reload; \
+	systemctl --user daemon-reload;
 
 #help t-local: Install locally built RPMs to a test filesystem.
 install-t:
@@ -710,12 +769,23 @@ install-t:
 		echo "done"; \
 	sudo chown -R boni:boni /aot/apps/test; \
 	sudo ldconfig; \
+	sudo systemctl daemon-reload; \
+	systemctl --user daemon-reload; \
 	done
 
 #help install-mock: Install locally built RPMs to the mock rootcache
 #help filesystem. This command is usually used with "make shell".
 install-mock: repoadd
 	$(MOCK) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME) -i $(filter-out ${DEBUGINFO_RPM},${RPMS})
+
+.PHONY: link-new-rpms-here
+link-new-rpms-here:
+	@mkdir -p ./rpms;
+	@rm -f ./rpms/*.rpm;
+	@for r in ${RESULTS_RPMS}; do \
+		echo "Installing $$r..."; \
+		ln -f $$r rpms/; \
+	done
 
 #help generateupstream: Run this rule to create or update the 'upstream' file
 #help by downloading the upstream source tarballs listed in the spec file and
@@ -753,7 +823,14 @@ cloc: $(SRPMFILE)
 	@$(MOCK) --clean --scrub=chroot --uniqueext=$(PKG_NAME)
 	cat results/cloc.txt
 
-.PHONY: whatrequires
+#
+
+.PHONY: refresh
+refresh:
+	@echo "PM_CONF_LOCAL=${PM_CONF_LOCAL}";
+	@dnf --config=${PM_CONF_LOCAL} repoquery --refresh --quiet --releasever=clear --provides ${PKG_NAME};
+
+.PHONY: whatrequires2
 #help whatrequires: Output a list of packages that directly depend on this one,
 #help showing the subpackage-level breakdown. Each line of output has the format
 #help "SUBPACKAGE(|SYMBOL)? <- PACKAGE (ARCH)". If ARCH is "src", the meaning is
@@ -765,8 +842,9 @@ cloc: $(SRPMFILE)
 #help python3-core provides the version-qualified symbol "python(abi) = 3.9",
 #help running `make whatrequires` for `python3` will detect packages that depend on
 #help "python(abi)", but not "python(abi) = 3.9".)
-whatrequires:
-	@Q="dnf --config=${PM_CONF} repoquery --quiet --releasever=clear"; \
+whatrequires2:
+	@echo "PM_CONF_LOCAL=${PM_CONF_LOCAL}";
+	@Q="dnf --config=${PM_CONF_LOCAL} repoquery --quiet --releasever=clear"; \
 	TMP=$$(mktemp -d); trap "rm -rf $$TMP" EXIT; \
 	$${Q} --provides ${PKG_NAME} | awk '{ print $$1 }' > $$TMP/${PKG_NAME}; \
 	( \
@@ -790,6 +868,21 @@ whatrequires:
 		done < $$TMP/$$subpkg \
 		) | awk '$$3 != "${PKG_NAME}"' | sed "s/^$$subpkg|\($$subpkg\)/\1/" | LC_COLLATE=C sort -u; \
 	done < $$TMP/subpkgs
+
+.PHONY: whatrequires
+#help whatrequires: Output a list of packages that directly depend on this one,
+#help showing the subpackage-level breakdown. Each line of output has the format
+#help "SUBPACKAGE(|SYMBOL)? <- PACKAGE (ARCH)". If ARCH is "src", the meaning is
+#help "PACKAGE has a BuildRequires (build dependency) on SUBPACKAGE". And if ARCH
+#help is "x86_64", the meaning is "PACKAGE has a Requires (runtime dependency) on
+#help SUBPACKAGE". The optional "|SYMBOL" portion is printed when the symbol
+#help required does not match the subpackage name. Note that the ability to query
+#help version-qualified dependencies is not yet implemented... (For example, if
+#help python3-core provides the version-qualified symbol "python(abi) = 3.9",
+#help running `make whatrequires` for `python3` will detect packages that depend on
+#help "python(abi)", but not "python(abi) = 3.9".)
+whatrequires:
+	@$(PYTHON) $(TOPLVL)/projects/common/whatrequires.py --pkg_name "${PKG_NAME}" --specfile "${SPECFILE}" --pm_conf_local "${PM_CONF_LOCAL}" $${DEBUG:+ --debug};
 
 # Define LTS-specific targets in a separate makefile
 -include $(TOPLVL)/projects/common/Makefile.common.lts

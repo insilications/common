@@ -257,19 +257,22 @@
     -DCMAKE_INSTALL_SBINDIR=%{_sbindir} \\\
     -DCMAKE_INSTALL_LIBDIR=%{_libdir} -DLIB_INSTALL_DIR=%{_libdir} -DLIB_SUFFIX=64 \\\
     -DCMAKE_INSTALL_SYSCONFDIR=/usr/share \\\
-    -DCMAKE_C_FLAGS_RELEASE:STRING="-pipe" \\\
-    -DCMAKE_CXX_FLAGS_RELEASE:STRING="-pipe" \\\
-    -DCMAKE_ASM_FLAGS_RELEASE:STRING="-pipe" \\\
+    -DCMAKE_C_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
+    -DCMAKE_CXX_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
+    -DCMAKE_ASM_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
+    -DCMAKE_Fortran_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
     -DCMAKE_NM=/usr/bin/gcc-nm \\\
     -DCMAKE_AR=/usr/bin/gcc-ar \\\
-    -DCMAKE_BUILD_TYPE="None" \\\
     -DCMAKE_RANLIB=/usr/bin/gcc-ranlib \\\
+    -DCMAKE_BUILD_TYPE=Release \\\
+    -DCMAKE_PREFIX_PATH="/usr;/usr/lib64;/usr/lib;/usr/local/cuda/lib64;/usr/share" \\\
     -DCMAKE_CTEST_ARGUMENTS="--output-on-failure"
 
 %qmake \
   qmake QMAKE_CFLAGS="$CFLAGS" \\\
       QMAKE_CXXFLAGS="$CXXFLAGS" \\\
       QMAKE_LFLAGS="$LDFLAGS" \\\
+      QMAKE_LIBDIR="/usr/lib64" \\\
       QMAKE_CFLAGS_RELEASE= \\\
       QT_CPU_FEATURES.x86_64+="avx avx2 bmi bmi2 f16c fma lzcnt popcnt" \\\
       QMAKE_CXXFLAGS_RELEASE=
@@ -593,16 +596,13 @@
     test -z "`find  %{?buildroot:%{buildroot}}  -path 'etc/*' ! -type d`" \
     rm -rf %{?buildroot:%{buildroot}}/etc/* \
     rm -rf %{?buildroot:%{buildroot}}/usr/share/factory/* \
+    chmod a+x %{?buildroot:%{buildroot}}{/usr,}/bin/* || : \
     find %{?buildroot:%{buildroot}} -name "__pycache__" | xargs rm -rf -- \
     if [ -d %{?buildroot:%{buildroot}}/usr/share/mime ] && ! [ -L %{?buildroot:%{buildroot}}/usr/share/mime ]; then \
          mv %{?buildroot:%{buildroot}}/usr/share/mime/packages %{?buildroot:%{buildroot}}/usr/share/mime-packages \
          rm -rf %{?buildroot:%{buildroot}}/usr/share/mime \
     fi\
     RPM_XARGS_PFLAG=-P%{_smp_build_ncpus} \
-    (find %{buildroot} -name "*.so.avx512" -print0; find %{buildroot}/usr/lib64/haswell/avx512_1 -name "*.so*" -print0) | \\\
-        xargs -0rtn1 $RPM_XARGS_PFLAG python /usr/share/clr-avx-tools/avxjudge.py -q -5 \
-    (find %{buildroot} -name "*.so.avx2" -print0; find %{buildroot}/usr/lib64/haswell \! -path "/usr/lib64/haswell/avx512_1/*" -name "*.so*" -print0) | \\\
-        xargs -0rtn1 $RPM_XARGS_PFLAG python /usr/share/clr-avx-tools/avxjudge.py -q -2 \
     find %{buildroot}/usr/lib32/ %{buildroot}/usr/lib64/ -maxdepth 8 -name '*.so*' -type f -print0 | \\\
        xargs -0rtn1 $RPM_XARGS_PFLAG %{_rpmconfigdir}/clr/brp-create-abi | sort -u > "%{_builddir}/%{?buildsubdir}"/abifiles.list\
     %{?__debug_package:%{__debug_install_post}}\

@@ -105,6 +105,10 @@ $(TOPLVL)/repo:
 	@echo "Creating local RPM repository $(TOPLVL)/repo"
 	mkdir $(TOPLVL)/repo
 
+$(TOPLVL)/reposrc:
+	@echo "Creating local src RPM repository $(TOPLVL)/reposrc"
+	mkdir $(TOPLVL)/reposrc
+
 # Enables the local RPM repo by installing package manager and Mock configs.
 # First argument is the path to the package manager config, and the second
 # argument is the path to the mock config. Each of these config files is
@@ -112,6 +116,11 @@ $(TOPLVL)/repo:
 localrepoenable: $(TOPLVL)/repo
 	@if grep -qx '\[localrepo\]' ${PM_CONF}; then \
 		echo "[ERROR] ${PM_CONF} contains section named [localrepo]."; \
+		echo "[ERROR] Remove that section and try again."; \
+		exit 1; \
+	fi >&2
+	@if grep -qx '\[localrepo-src\]' ${PM_CONF}; then \
+		echo "[ERROR] ${PM_CONF} contains section named [localrepo-src]."; \
 		echo "[ERROR] Remove that section and try again."; \
 		exit 1; \
 	fi >&2
@@ -133,6 +142,8 @@ localrepoenable: $(TOPLVL)/repo
 	cp ${PM_CONF} $$pm_new; \
 	printf "\n\n[localrepo]\nname=localrepo\nfailovermethod=priority\nenabled=1\ngpgcheck=0\npriority=1\nmax_parallel_downloads=20\n" >> $$pm_new; \
 	printf "baseurl=file://$$(realpath $<)/\n\n" >> $$pm_new; \
+	printf "\n\n[localrepo-src]\nname=localrepo-src\nfailovermethod=priority\nenabled=1\ngpgcheck=0\npriority=1\nmax_parallel_downloads=20\n" >> $$pm_new; \
+	printf "baseurl=file://$$(realpath $(TOPLVL)/reposrc)/\n\n" >> $$pm_new; \
 	if ! cmp -s $$pm_new $$pm_orig; then \
 		flock $</repo.lock mv $$pm_new $$pm_orig; \
 	fi; \
@@ -147,6 +158,11 @@ localrepoenable: $(TOPLVL)/repo
 	fi; \
 	rm -f $$mock_new
 
+# Disables the local src RPM repo by removing the installed package manager and
+# Mock configuration files.
+localrepodisablesrc: $(TOPLVL)/reposrc
+	flock $</repo.lock rm -f $</dnf.conf $</clear.cfg
+
 # Disables the local RPM repo by removing the installed package manager and
 # Mock configuration files.
 localrepodisable: $(TOPLVL)/repo
@@ -154,7 +170,11 @@ localrepodisable: $(TOPLVL)/repo
 
 # Runs createrepo_c for the local RPM repo
 localrepocreate: $(TOPLVL)/repo
-	cd $< && flock repo.lock -c "PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' createrepo_c --workers 16 ."
+	cd $< && flock repo.lock -c "PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' createrepo_c --update --workers 16 ."
+
+# Runs createrepo_c for the local RPM repo
+localrepocreatesrc: $(TOPLVL)/reposrc
+	cd $< && flock repo.lock -c "PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' createrepo_c --update --workers 16 ."
 
 # Remove all RPMs from the local RPM repo
 localrepoclean: $(TOPLVL)/repo
@@ -231,7 +251,6 @@ link-new-rpms: require-pkg-repo-dir
 	rm -f ${PKG_REPO_DIR}/rpms/*.rpm
 	find ${PKG_REPO_DIR}/results -maxdepth 1 -name '*.rpm' -exec ln {} ${PKG_REPO_DIR}/rpms/ \;
 	rm -f ${PKG_REPO_DIR}/rpms/*.src.rpm
-
 
 .PHONY: help
 ##### Code
