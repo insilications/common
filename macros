@@ -685,8 +685,8 @@ LANG=en_US.UTF-8\
 export LANG\
 unset PYTHONOPTIMIZE \
 PATH="/usr/lib64/ccache/bin:/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/bin/haswell:/usr/bin:/usr/sbin"; export PATH ; \
-rm -rf %{?buildroot:%{buildroot}} \
-mkdir -p %{?buildroot:%{buildroot}} \
+%{!?keepbuildroot:rm -rf %{?buildroot:%{buildroot}}} \
+%{!?keepbuildroot:mkdir -p %{?buildroot:%{buildroot}}} \
 %{nil}
 
 %check %%check\
