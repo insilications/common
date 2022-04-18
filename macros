@@ -603,7 +603,7 @@
          rm -rf %{?buildroot:%{buildroot}}/usr/share/mime \
     fi\
     RPM_XARGS_PFLAG=-P%{_smp_build_ncpus} \
-    find %{buildroot}/usr/lib32/ %{buildroot}/usr/lib64/ -maxdepth 8 -name '*.so*' -type f -print0 | \\\
+    find %{buildroot}/usr/lib32/ %{buildroot}/usr/lib64/ -maxdepth 20 -name '*.so*' -type f -print0 | \\\
        xargs -0rtn1 $RPM_XARGS_PFLAG %{_rpmconfigdir}/clr/brp-create-abi | sort -u > "%{_builddir}/%{?buildsubdir}"/abifiles.list\
     %{?__debug_package:%{__debug_install_post}}\
     [ -d  %{?buildroot:%{buildroot}}/usr/lib/debug ] && mkdir -p  %{?buildroot:%{buildroot}}/usr/share || : \

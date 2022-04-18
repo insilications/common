@@ -239,7 +239,7 @@ autospecnew: preautospecnew-checks
 			$(call gitoliteurl,packages/$(NAME)); \
 			$(call subjectprefix,$(NAME)); \
 		); \
-		printf 'PKG_NAME := %s\nURL = %s\nARCHIVES = %s\nARCHIVES_GIT = %s\n\ninclude ../common/Makefile.common\n' $(NAME) '$(value URL)' '$(value ARCHIVES)' '$(value ARCHIVES_GIT)' > $(TOPLVL)/packages/$(NAME)/Makefile; \
+		printf 'PKG_NAME := %s\nURL = %s\nARCHIVES = %s\nARCHIVES_GIT = %s\nFG = %s\nFROM_BRANCH = %s\n\ninclude ../common/Makefile.common\n' $(PKG_NAME) '$(firstword $(value NEWURL) $(value URL))' '$(value ARCHIVES)' '$(value ARCHIVES_GIT)' '$(value FG)' '$(value FROM_BRANCH)' > $(TOPLVL)/packages/$(NAME)/Makefile; \
 		python3 $(TOPLVL)/projects/autospec/autospec/autospec.py \
 			--target packages/$(NAME) \
 			--integrity \

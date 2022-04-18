@@ -48,6 +48,7 @@ MOCK_SMP_FLAGS=$(patsubst -j%, -D_smp_mflags\ -j%,$(filter -j%, $(MAKEFLAGS)))
 
 ifeq ($(PYTHON_URL),/home/boni/.local/pypy-venv/bin/python)
 MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so /home/boni/.local/pypy-venv/bin/python --jit max_unroll_recursion=16,disable_unrolling=300 /home/boni/.local/pypy-venv/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
+# MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so /home/boni/.local/pypy-venv/bin/python --jit max_unroll_recursion=16,disable_unrolling=300,vec_all=1,vec=1 /home/boni/.local/pypy-venv/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
 else
 MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' /usr/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
 endif
@@ -200,7 +201,7 @@ autospec: preautospec-checks clean-old-content
 		echo "Specfile already exists and was not created by autospec.py! Aborting."; \
 		exit 1; \
 	fi
-	@printf 'PKG_NAME := %s\nURL = %s\nARCHIVES = %s\nARCHIVES_GIT = %s\n\ninclude ../common/Makefile.common\n' $(PKG_NAME) '$(firstword $(value NEWURL) $(value URL))' '$(value ARCHIVES)' '$(value ARCHIVES_GIT)' > Makefile
+	@printf 'PKG_NAME := %s\nURL = %s\nARCHIVES = %s\nARCHIVES_GIT = %s\nFG = %s\nFROM_BRANCH = %s\n\ninclude ../common/Makefile.common\n' $(PKG_NAME) '$(firstword $(value NEWURL) $(value URL))' '$(value ARCHIVES)' '$(value ARCHIVES_GIT)' '$(value FG)' '$(value FROM_BRANCH)' > Makefile
 	$(PYTHON) $(TOPLVL)/projects/autospec/autospec/autospec.py \
 		--target . \
 		--config "$(AUTOSPEC_CONF)" \
@@ -252,6 +253,16 @@ endif
 
 .PHONY: installit
 
+#help autospecnogit: Runs autospecnogit with short-circuit=prep and --cache-alterations
+autospecprep-update-root-cache:
+	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep --cache-alterations"
+
+update-root-cache:
+	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --cache-alterations
+
+update-root-cache-ccache:
+	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --cache-alterations
+
 #help autospecnogit: Runs autospec, but does not create a commit
 autospecnogit:
 	$(MAKE) autospec SKIP_GIT=1
@@ -259,13 +270,6 @@ autospecnogit:
 #help autospecnogit: Runs autospecnogit with short-circuit=prep
 autospecprep:
 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="$(MOCK_OPTS) --short-circuit=prep"
-# 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --config-opts=basedir=/aot/var/lib/mock --disable-plugin=ccache --short-circuit=prep"
-
-#help autospecnogit: Runs autospecnogit with short-circuit=prep and --cache-alterations
-# autospecprep-update-root-cache:
-# 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep --cache-alterations"
-update-root-cache:
-	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --cache-alterations
 
 #help autospecnogit: Runs autospecnogit with short-circuit=build
 autospecbuild:
@@ -286,12 +290,6 @@ autospecbinary:
 #help autospecnogit: Runs autospecnogit with short-circuit=prep and ccache enabled
 autospecprepccache:
 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep"
-
-#help autospecnogit: Runs autospecnogit with short-circuit=prep --cache-alterations and ccache enabled
-# autospecprepccache-update-root-cache:
-# 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=prep --cache-alterations"
-update-root-cache-ccache:
-	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --cache-alterations
 
 #help autospecnogit: Runs autospecnogit with short-circuit=build and ccache enabled
 autospecbuildccache:
@@ -325,7 +323,6 @@ updateit:
 	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --update
 
 installit:
-# 	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --install $(filter-out $@,$(MAKECMDGOALS))
 	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --install $(RUN_ARGS)
 
 #help autospecnostate: Runs autospec, but cleans up mock chroots
@@ -702,7 +699,11 @@ install-local:
 	$(eval NO_DEV32_RPM := $(filter-out ${DEV32_RPM},${NO_LIB32_RPM}))
 	$(eval NO_STATICDEV32_RPM := $(filter-out ${STATICDEV32_RPM},${NO_DEV32_RPM}))
 	$(eval NO_ABI_RPM := $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}))
-	@sudo rpm -Uvh --force --noverify --noscripts --nodeps $(NO_ABI_RPM)
+	@sudo rpm -Uvh --force --noverify --nodeps $(NO_ABI_RPM)
+	@sudo rm /usr/lib32/*.abi
+	@sudo /usr/libexec/clr-elf-replace -v
+	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v4/* /usr/lib64/
+	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v3/* /usr/lib64/
 	@$(MAKE) -s install-debuginfo-local
 	@sudo ldconfig
 	@sudo systemctl daemon-reload
@@ -721,6 +722,10 @@ install-local-all-repo:
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	done
+	@sudo rm /usr/lib32/*.abi
+	@sudo /usr/libexec/clr-elf-replace -v
+	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v4/* /usr/lib64/
+	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v3/* /usr/lib64/
 	@$(MAKE) -s install-debuginfo-local; \
 	sudo ldconfig; \
 	sudo systemctl daemon-reload; \
@@ -752,6 +757,10 @@ install-local-all:
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	done
+	@sudo rm /usr/lib32/*.abi
+	@sudo /usr/libexec/clr-elf-replace -v
+	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v4/* /usr/lib64/
+	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v3/* /usr/lib64/
 	@$(MAKE) -s install-debuginfo-local; \
 	sudo ldconfig; \
 	sudo systemctl daemon-reload; \
@@ -768,6 +777,10 @@ install-t:
 		rpm2cpio $$r | (cd /aot/apps/test; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	sudo chown -R boni:boni /aot/apps/test; \
+	sudo rm /usr/lib32/*.abi \
+	sudo /usr/libexec/clr-elf-replace -v \
+	sudo mv /usr/lib64/glibc-hwcaps/x86-64-v4/* /usr/lib64/ \
+	sudo mv /usr/lib64/glibc-hwcaps/x86-64-v3/* /usr/lib64/ \
 	sudo ldconfig; \
 	sudo systemctl daemon-reload; \
 	systemctl --user daemon-reload; \
