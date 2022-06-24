@@ -699,13 +699,9 @@ install-local:
 	$(eval NO_DEV32_RPM := $(filter-out ${DEV32_RPM},${NO_LIB32_RPM}))
 	$(eval NO_STATICDEV32_RPM := $(filter-out ${STATICDEV32_RPM},${NO_DEV32_RPM}))
 	$(eval NO_ABI_RPM := $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}))
-	@sudo rpm -Uvh --force --noverify --nodeps $(NO_ABI_RPM)
-	@sudo rm /usr/lib32/*.abi
-	@sudo /usr/libexec/clr-elf-replace -v
-	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v4/* /usr/lib64/
-	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v3/* /usr/lib64/
+	@sudo frpm $(NO_ABI_RPM)
 	@$(MAKE) -s install-debuginfo-local
-	@sudo ldconfig
+	@sudo ldconfig -X
 	@sudo systemctl daemon-reload
 	@systemctl --user daemon-reload
 
@@ -722,12 +718,9 @@ install-local-all-repo:
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	done
-	@sudo rm /usr/lib32/*.abi
-	@sudo /usr/libexec/clr-elf-replace -v
-	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v4/* /usr/lib64/
-	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v3/* /usr/lib64/
+	@sudo frpm3
 	@$(MAKE) -s install-debuginfo-local; \
-	sudo ldconfig; \
+	sudo ldconfig -X; \
 	sudo systemctl daemon-reload; \
 	systemctl --user daemon-reload;
 
@@ -744,8 +737,9 @@ install-local-no-static:
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	done
+	@sudo frpm3
 	@$(MAKE) -s install-debuginfo-local; \
-	sudo ldconfig; \
+	sudo ldconfig -X; \
 	sudo systemctl daemon-reload; \
 	systemctl --user daemon-reload;
 
@@ -757,12 +751,9 @@ install-local-all:
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	done
-	@sudo rm /usr/lib32/*.abi
-	@sudo /usr/libexec/clr-elf-replace -v
-	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v4/* /usr/lib64/
-	@sudo mv /usr/lib64/glibc-hwcaps/x86-64-v3/* /usr/lib64/
+	@sudo frpm3
 	@$(MAKE) -s install-debuginfo-local; \
-	sudo ldconfig; \
+	sudo ldconfig -X; \
 	sudo systemctl daemon-reload; \
 	systemctl --user daemon-reload;
 
@@ -777,11 +768,8 @@ install-t:
 		rpm2cpio $$r | (cd /aot/apps/test; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	sudo chown -R boni:boni /aot/apps/test; \
-	sudo rm /usr/lib32/*.abi \
-	sudo /usr/libexec/clr-elf-replace -v \
-	sudo mv /usr/lib64/glibc-hwcaps/x86-64-v4/* /usr/lib64/ \
-	sudo mv /usr/lib64/glibc-hwcaps/x86-64-v3/* /usr/lib64/ \
-	sudo ldconfig; \
+	sudo frpm3 \
+	sudo ldconfig -X; \
 	sudo systemctl daemon-reload; \
 	systemctl --user daemon-reload; \
 	done
