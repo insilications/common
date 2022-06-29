@@ -122,7 +122,7 @@ prebuild-checks:
 #help which creates a src.rpm file from the spec file.
 #help Use MOCK_OPTS environment varible to pass down arbitrary mock options.
 build: prebuild-checks $(SPECFILE) upstream $(SRPMFILE)
-	$(MOCK) $(SRPMFILE) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME)
+	$(MOCK) $(SRPMFILE) --result=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
 	$(MAKE) link-new-rpms PKG_REPO_DIR="."
 	@perl $(TOPLVL)/projects/common/logcheck.pl results/build.log
 	@perl $(TOPLVL)/projects/common/count.pl results/build.log &> testresults
@@ -130,7 +130,7 @@ build: prebuild-checks $(SPECFILE) upstream $(SRPMFILE)
 
 #help build-nocheck: Same as 'make build', but do not run the package's test suite.
 build-nocheck: configemail $(SPECFILE) upstream $(SRPMFILE)
-	$(MOCK) $(SRPMFILE) --nocheck --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME)
+	$(MOCK) $(SRPMFILE) --nocheck --result=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
 	$(MAKE) link-new-rpms PKG_REPO_DIR="."
 	@perl $(TOPLVL)/projects/common/logcheck.pl results/build.log
 	@perl $(TOPLVL)/projects/common/count.pl results/build.log &> testresults
@@ -141,11 +141,11 @@ fmvpatches: results/build.log
 
 #help rootshell: Puts you in a root shell at the top of your build root.
 rootshell:
-	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME)
+	$(MOCK) --result=results/ --no-clean --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
 
 #help shell: Puts you in a user shell in the home directory in the build root.
 shell:
-	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --unpriv "cd && exec \$$SHELL -l -i"
+	$(MOCK) --result=results/ --no-clean --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --unpriv "cd && exec \$$SHELL -l -i"
 
 # Always rebuild the source rpm
 .PHONY: $(SRPMFILE)
@@ -244,7 +244,6 @@ for-review.txt:
 	git diff | grep -q index || python3 $(TOPLVL)/projects/common/patchfilter.py > for-review.txt
 .PHONY: for-review.txt
 
-# ifeq (,$(filter $(firstword $(MAKECMDGOALS)),installit autospecprep))
 ifeq (installit,$(firstword $(MAKECMDGOALS)))
   RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   # ...and turn them into do-nothing targets
@@ -252,6 +251,14 @@ ifeq (installit,$(firstword $(MAKECMDGOALS)))
 endif
 
 .PHONY: installit
+
+ifeq (removeit,$(firstword $(MAKECMDGOALS)))
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
+.PHONY: removeit
 
 #help autospecnogit: Runs autospecnogit with short-circuit=prep and --cache-alterations
 autospecprep-update-root-cache:
@@ -304,10 +311,7 @@ autospecbinaryccache:
 	$(MAKE) autospec SKIP_GIT=1 MOCK_OPTS="--disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --short-circuit=binary"
 
 buildit:
-	$(MAKE) build MOCK_OPTS="--disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock"
-
-builditccache:
-	$(MAKE) build MOCK_OPTS="--disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock"
+	$(MAKE) build
 
 #help root: Runs root shell for /aot/var/lib/mock
 shellaot:
@@ -320,10 +324,14 @@ debugshowoptions:
 	$(MOCK) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --debug-config-expanded
 
 updateit:
-	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --update
+	$(MOCK) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --update
+	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "exec /opt/mybin/frpm4"
 
 installit:
-	$(MOCK) --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --install $(RUN_ARGS)
+	$(MOCK) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --install $(RUN_ARGS)
+
+removeit:
+	$(MOCK) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) remove $(RUN_ARGS)
 
 #help autospecnostate: Runs autospec, but cleans up mock chroots
 #help and disables interactive mode.
@@ -699,11 +707,8 @@ install-local:
 	$(eval NO_DEV32_RPM := $(filter-out ${DEV32_RPM},${NO_LIB32_RPM}))
 	$(eval NO_STATICDEV32_RPM := $(filter-out ${STATICDEV32_RPM},${NO_DEV32_RPM}))
 	$(eval NO_ABI_RPM := $(filter-out ${ABI_RPM},${NO_STATICDEV32_RPM}))
-	@sudo frpm $(NO_ABI_RPM)
+	frpmt $(NO_ABI_RPM)
 	@$(MAKE) -s install-debuginfo-local
-	@sudo ldconfig -X
-	@sudo systemctl daemon-reload
-	@systemctl --user daemon-reload
 
 #help install-local-repo-all: Install all locally built RPMs to the root filesystem.
 install-local-all-repo:
@@ -718,11 +723,8 @@ install-local-all-repo:
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	done
-	@sudo frpm3
-	@$(MAKE) -s install-debuginfo-local; \
-	sudo ldconfig -X; \
-	sudo systemctl daemon-reload; \
-	systemctl --user daemon-reload;
+	frpm3
+	@$(MAKE) -s install-debuginfo-local;
 
 #help install-local: Install locally built RPMs to the root filesystem. Note that the
 #help debuginfo RPM installs to /var/cache/debuginfo
@@ -737,11 +739,8 @@ install-local-no-static:
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	done
-	@sudo frpm3
-	@$(MAKE) -s install-debuginfo-local; \
-	sudo ldconfig -X; \
-	sudo systemctl daemon-reload; \
-	systemctl --user daemon-reload;
+	frpm3
+	@$(MAKE) -s install-debuginfo-local;
 
 #help install-local: Install locally built RPMs to the root filesystem. Note that the
 #help debuginfo RPM installs to /var/cache/debuginfo
@@ -751,11 +750,8 @@ install-local-all:
 		rpm2cpio $$r | (cd /; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	done
-	@sudo frpm3
-	@$(MAKE) -s install-debuginfo-local; \
-	sudo ldconfig -X; \
-	sudo systemctl daemon-reload; \
-	systemctl --user daemon-reload;
+	frpm3
+	@$(MAKE) -s install-debuginfo-local;
 
 #help t-local: Install locally built RPMs to a test filesystem.
 install-t:
@@ -768,10 +764,7 @@ install-t:
 		rpm2cpio $$r | (cd /aot/apps/test; sudo cpio -i -d -u 2> /dev/null); \
 		echo "done"; \
 	sudo chown -R boni:boni /aot/apps/test; \
-	sudo frpm3 \
-	sudo ldconfig -X; \
-	sudo systemctl daemon-reload; \
-	systemctl --user daemon-reload; \
+	frpm3 \
 	done
 
 #help install-mock: Install locally built RPMs to the mock rootcache

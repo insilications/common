@@ -138,7 +138,7 @@ ifeq (pull,$(filter pull,${MAKECMDGOALS}))
  ifeq (3,$(word 1,$(subst ., ,${MAKE_VERSION})))
  $(warning *************** This version of make is too old to pull in parallel )
  else
- MAKEFLAGS += -j4 -Otarget
+ MAKEFLAGS += -j10 -Otarget
  endif
 endif
 pull: ${PULL_PKGS}

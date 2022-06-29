@@ -380,8 +380,8 @@
   [ -d %{?buildroot:%{buildroot}}/sbin ] && mv %{?buildroot:%{buildroot}}/sbin/* %{?buildroot:%{buildroot}}/usr/bin/  || : \
   [ -d %{?buildroot:%{buildroot}}/usr/share/pkgconfig ] && mkdir -p %{?buildroot:%{buildroot}}/usr/lib64/pkgconfig || : \
   [ -d %{?buildroot:%{buildroot}}/usr/lib/pkgconfig ] && mkdir -p %{?buildroot:%{buildroot}}/usr/lib64/pkgconfig || : \
-  [ -d %{?buildroot:%{buildroot}}/usr/share/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/share/pkgconfig/*   %{?buildroot:%{buildroot}}/usr/lib64/pkgconfig   || : \
-  [ -d %{?buildroot:%{buildroot}}/usr/lib/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/lib/pkgconfig/*   %{?buildroot:%{buildroot}}/usr/lib64/pkgconfig   || : \
+  [ -d %{?buildroot:%{buildroot}}/usr/share/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/share/pkgconfig/* %{?buildroot:%{buildroot}}/usr/lib64/pkgconfig && rmdir %{?buildroot:%{buildroot}}/usr/share/pkgconfig || : \
+  [ -d %{?buildroot:%{buildroot}}/usr/lib/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/lib/pkgconfig/* %{?buildroot:%{buildroot}}/usr/lib64/pkgconfig && rmdir %{?buildroot:%{buildroot}}/usr/lib/pkgconfig || : \
   [ -d %{?buildroot:%{buildroot}}/usr/share/doc/%{name}-%{version} ] && mv %{?buildroot:%{buildroot}}/usr/share/doc/%{name}-%{version} %{?buildroot:%{buildroot}}/usr/share/doc/%{name} || : \
   [ -d %{?buildroot:%{buildroot}}/usr/sbin ] && rmdir %{?buildroot:%{buildroot}}/usr/sbin || : \
   [ -d %{?buildroot:%{buildroot}}/sbin ] && rmdir %{?buildroot:%{buildroot}}/sbin || : \
@@ -429,14 +429,14 @@
 
 %ninja_install32() \
   DESTDIR=%{?buildroot:%{buildroot}} \\\
-	INSTALLROOT=%{?buildroot:%{buildroot}} \\\
-	install_prefix=%{?buildroot:%{buildroot}} \\\
-	BUILDROOT=%{?buildroot:%{buildroot}} \\\
-	BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
-	INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
-	CFLAGS="${CFLAGS}" ASMFLAGS="${ASMFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="$LIBS" \\\
-	ninja --verbose \\\
-	%{?_smp_mflags:%{_smp_mflags}} \\\
+  INSTALLROOT=%{?buildroot:%{buildroot}} \\\
+  install_prefix=%{?buildroot:%{buildroot}} \\\
+  BUILDROOT=%{?buildroot:%{buildroot}} \\\
+  BUILD_ROOT=%{?buildroot:%{buildroot}} \\\
+  INSTALL_ROOT=%{?buildroot:%{buildroot}} \\\
+  CFLAGS="${CFLAGS}" ASMFLAGS="${ASMFLAGS}" CXXFLAGS="${CXXFLAGS}" FFLAGS="${FFLAGS}" FCFLAGS="${FCFLAGS}" LDFLAGS="${LDFLAGS}" LIBS="$LIBS" \\\
+  ninja --verbose \\\
+  %{?_smp_mflags:%{_smp_mflags}} \\\
   install %* \
   rm -f %{?buildroot:%{buildroot}}/usr/share/info/dir \
   rm -f %{?buildroot:%{buildroot}}/usr/lib/perl5/*/*/perllocal.pod \
@@ -448,8 +448,8 @@
   [ -d %{?buildroot:%{buildroot}}/sbin ] && mv %{?buildroot:%{buildroot}}/sbin/* %{?buildroot:%{buildroot}}/usr/bin/  || : \
   [ -d %{?buildroot:%{buildroot}}/usr/share/pkgconfig ] && mkdir -p %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig || : \
   [ -d %{?buildroot:%{buildroot}}/usr/lib/pkgconfig ] && mkdir -p %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig || : \
-  [ -d %{?buildroot:%{buildroot}}/usr/share/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/share/pkgconfig/*   %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig   || : \
-  [ -d %{?buildroot:%{buildroot}}/usr/lib/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/lib/pkgconfig/*   %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig   || : \
+  [ -d %{?buildroot:%{buildroot}}/usr/share/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/share/pkgconfig/* %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig && rmdir %{?buildroot:%{buildroot}}/usr/share/pkgconfig || : \
+  [ -d %{?buildroot:%{buildroot}}/usr/lib/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/lib/pkgconfig/* %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig && rmdir %{?buildroot:%{buildroot}}/usr/lib/pkgconfig || : \
   [ -d %{?buildroot:%{buildroot}}/usr/share/doc/%{name}-%{version} ] && mv %{?buildroot:%{buildroot}}/usr/share/doc/%{name}-%{version} %{?buildroot:%{buildroot}}/usr/share/doc/%{name} || : \
   [ -d %{?buildroot:%{buildroot}}/usr/sbin ] && rmdir %{?buildroot:%{buildroot}}/usr/sbin || : \
   [ -d %{?buildroot:%{buildroot}}/sbin ] && rmdir %{?buildroot:%{buildroot}}/sbin || : \
@@ -518,8 +518,8 @@
   [ -d %{?buildroot:%{buildroot}}/sbin ] && mv %{?buildroot:%{buildroot}}/sbin/* %{?buildroot:%{buildroot}}/usr/bin/  || : \
   [ -d %{?buildroot:%{buildroot}}/usr/share/pkgconfig ] && mkdir -p %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig || : \
   [ -d %{?buildroot:%{buildroot}}/usr/lib/pkgconfig ] && mkdir -p %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig || : \
-  [ -d %{?buildroot:%{buildroot}}/usr/share/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/share/pkgconfig/*   %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig   || : \
-  [ -d %{?buildroot:%{buildroot}}/usr/lib/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/lib/pkgconfig/*   %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig   || : \
+  [ -d %{?buildroot:%{buildroot}}/usr/share/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/share/pkgconfig/* %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig && rmdir %{?buildroot:%{buildroot}}/usr/share/pkgconfig || : \
+  [ -d %{?buildroot:%{buildroot}}/usr/lib/pkgconfig ] && mv %{?buildroot:%{buildroot}}/usr/lib/pkgconfig/* %{?buildroot:%{buildroot}}/usr/lib32/pkgconfig && rmdir %{?buildroot:%{buildroot}}/usr/lib/pkgconfig || : \
   [ -d %{?buildroot:%{buildroot}}/usr/share/doc/%{name}-%{version} ] && mv %{?buildroot:%{buildroot}}/usr/share/doc/%{name}-%{version} %{?buildroot:%{buildroot}}/usr/share/doc/%{name} || : \
   [ -d %{?buildroot:%{buildroot}}/usr/sbin ] && rmdir %{?buildroot:%{buildroot}}/usr/sbin || : \
   [ -d %{?buildroot:%{buildroot}}/sbin ] && rmdir %{?buildroot:%{buildroot}}/sbin || : \
@@ -923,4 +923,4 @@ install -D -m 644 %1-16.png $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/16x16/apps/
 # 0 			disable
 # -1 (or undefined)	autodetect on platforms where supported, otherwise
 # 			default to disabled
-%_minimize_writes 1
+# %_minimize_writes 1
