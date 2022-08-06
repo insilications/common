@@ -170,11 +170,11 @@ localrepodisable: $(TOPLVL)/repo
 
 # Runs createrepo_c for the local RPM repo
 localrepocreate: $(TOPLVL)/repo
-	cd $< && flock repo.lock -c "PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' createrepo_c --update --workers 16 ."
+	cd $< && flock repo.lock -c "PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' createrepo_c --update --workers 20 ."
 
 # Runs createrepo_c for the local RPM repo
 localrepocreatesrc: $(TOPLVL)/reposrc
-	cd $< && flock repo.lock -c "PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' createrepo_c --update --workers 16 ."
+	cd $< && flock repo.lock -c "PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' createrepo_c --update --workers 20 ."
 
 # Remove all RPMs from the local RPM repo
 localrepoclean: $(TOPLVL)/repo
@@ -249,8 +249,8 @@ require-pkg-repo-dir:
 link-new-rpms: require-pkg-repo-dir
 	mkdir -p ${PKG_REPO_DIR}/rpms
 	rm -f ${PKG_REPO_DIR}/rpms/*.rpm
-	find ${PKG_REPO_DIR}/results -maxdepth 1 -name '*.rpm' -exec ln {} ${PKG_REPO_DIR}/rpms/ \;
 	rm -f ${PKG_REPO_DIR}/rpms/*.src.rpm
+	find ${PKG_REPO_DIR}/results -maxdepth 1 -name '*.rpm' -exec ln {} ${PKG_REPO_DIR}/rpms/ \;
 
 .PHONY: help
 ##### Code

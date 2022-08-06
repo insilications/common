@@ -47,8 +47,8 @@ ALL_STATICDEV_RPM = $(wildcard ../../repo/*staticdev-*.rpm)
 MOCK_SMP_FLAGS=$(patsubst -j%, -D_smp_mflags\ -j%,$(filter -j%, $(MAKEFLAGS)))
 
 ifeq ($(PYTHON_URL),/home/boni/.local/pypy-venv/bin/python)
-MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so /home/boni/.local/pypy-venv/bin/python --jit max_unroll_recursion=16,disable_unrolling=300 /home/boni/.local/pypy-venv/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
-# MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so /home/boni/.local/pypy-venv/bin/python --jit max_unroll_recursion=16,disable_unrolling=300,vec_all=1,vec=1 /home/boni/.local/pypy-venv/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
+MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so /home/boni/.local/pypy-venv/bin/python /home/boni/.local/pypy-venv/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
+# MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD=/usr/lib64/libmimalloc.so /home/boni/.local/pypy-venv/bin/python --jit max_unroll_recursion=16,disable_unrolling=300 /home/boni/.local/pypy-venv/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
 else
 MOCK := sudo PYTHONMALLOC=malloc MIMALLOC_PAGE_RESET=0 MIMALLOC_LARGE_OS_PAGES=1 LD_PRELOAD='/usr/lib64/nosync/nosync.so /usr/lib64/libmimalloc.so' /usr/bin/mock -r $(MOCK_CONFIG_VAL) $(MOCK_OPTS)
 endif
@@ -122,7 +122,7 @@ prebuild-checks:
 #help which creates a src.rpm file from the spec file.
 #help Use MOCK_OPTS environment varible to pass down arbitrary mock options.
 build: prebuild-checks $(SPECFILE) upstream $(SRPMFILE)
-	$(MOCK) $(SRPMFILE) --result=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
+	$(MOCK) $(SRPMFILE) --resultdir=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
 	$(MAKE) link-new-rpms PKG_REPO_DIR="."
 	@perl $(TOPLVL)/projects/common/logcheck.pl results/build.log
 	@perl $(TOPLVL)/projects/common/count.pl results/build.log &> testresults
@@ -130,7 +130,7 @@ build: prebuild-checks $(SPECFILE) upstream $(SRPMFILE)
 
 #help build-nocheck: Same as 'make build', but do not run the package's test suite.
 build-nocheck: configemail $(SPECFILE) upstream $(SRPMFILE)
-	$(MOCK) $(SRPMFILE) --nocheck --result=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
+	$(MOCK) $(SRPMFILE) --nocheck --resultdir=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
 	$(MAKE) link-new-rpms PKG_REPO_DIR="."
 	@perl $(TOPLVL)/projects/common/logcheck.pl results/build.log
 	@perl $(TOPLVL)/projects/common/count.pl results/build.log &> testresults
@@ -141,19 +141,20 @@ fmvpatches: results/build.log
 
 #help rootshell: Puts you in a root shell at the top of your build root.
 rootshell:
-	$(MOCK) --result=results/ --no-clean --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
+	$(MOCK) --resultdir=results/ --no-clean --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL)
 
 #help shell: Puts you in a user shell in the home directory in the build root.
 shell:
-	$(MOCK) --result=results/ --no-clean --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --unpriv "cd && exec \$$SHELL -l -i"
+	$(MOCK) --resultdir=results/ --no-clean --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --unpriv "cd && exec \$$SHELL -l -i"
 
 # Always rebuild the source rpm
 .PHONY: $(SRPMFILE)
 $(SRPMFILE): $(SPECFILE) $(__allsources) clean-old-content
-	@$(MAKE) spdxcheck
-	$(MOCK) --buildsrpm --source=./ --spec=$(SPECFILE) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME)
-	mv results/root.log results/srpm-root.log
-	mv results/build.log results/srpm-build.log
+# 	@$(MAKE) spdxcheck
+	echo "teste"
+# 	$(MOCK) --buildsrpm --source=./ --spec=$(SPECFILE) --resultdir=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME)
+# 	mv results/root.log results/srpm-root.log
+# 	mv results/build.log results/srpm-build.log
 
 # Do a git fetch and a git rebase to apply local commits on top of latest
 # commits from the remote. A git fetch/rebase is used rather than a git pull so
@@ -196,14 +197,14 @@ preautospec-checks:
 #help Use MOCK_OPTS environment varible to pass down arbitrary mock options
 #help to autospec.
 #help For more information, see the project at https://github.com/clearlinux/autospec
-autospec: preautospec-checks clean-old-content
+autospec: preautospec-checks
 	@if [ -e $(SPECFILE) ] && ! grep -q "# Generated by: autospec.py" $(SPECFILE) ; then \
 		echo "Specfile already exists and was not created by autospec.py! Aborting."; \
 		exit 1; \
 	fi
 	@printf 'PKG_NAME := %s\nURL = %s\nARCHIVES = %s\nARCHIVES_GIT = %s\nFG = %s\nFROM_BRANCH = %s\n\ninclude ../common/Makefile.common\n' $(PKG_NAME) '$(firstword $(value NEWURL) $(value URL))' '$(value ARCHIVES)' '$(value ARCHIVES_GIT)' '$(value FG)' '$(value FROM_BRANCH)' > Makefile
 	$(PYTHON) $(TOPLVL)/projects/autospec/autospec/autospec.py \
-		--target . \
+		--target $(realpath --canonicalize-existing .) \
 		--config "$(AUTOSPEC_CONF)" \
 		--name $(PKG_NAME) \
 		--archives $(ARCHIVES) \
@@ -214,7 +215,7 @@ autospec: preautospec-checks clean-old-content
 		$${NON_INTERACTIVE:+ --non_interactive} \
 		$${SKIP_GIT:+ --skip-git} \
 		$${SKIP_BUMP:+ --skip-bump} \
-		$${CLEANUP:+ -C} \
+		$${CLEANUP:+ --cleanup} \
 		$${FG:+ --download_from_git $${FG}} \
 		$${REDO_GIT:+ --redownload_from_git} \
 		$${FROM_BRANCH:+ --from_branch $${FROM_BRANCH}} \
@@ -223,6 +224,7 @@ autospec: preautospec-checks clean-old-content
 		$${FORCE_FC:+ --force_fullclone $${FORCE_FC}} \
 		$${FILE_RESTART:+ --do_file_restart} \
 		$${DEBUG:+ --debug} \
+		$${FORCE_BUILD_SRPM:+ --force_build_srpm} \
 		$(firstword $(NEWURL) $(URL));
 # 	@$(MAKE) spdxcheck
 # 	@$(MAKE) checkblacklist
@@ -315,23 +317,23 @@ buildit:
 
 #help root: Runs root shell for /aot/var/lib/mock
 shellaot:
-	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "cd /builddir/build/BUILD && exec \$$SHELL -i"
+	$(MOCK) --resultdir=results/ --no-clean --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "cd /builddir/build/BUILD && exec \$$SHELL -i"
 
 shellaotcc:
-	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "cd /builddir/build/BUILD && exec \$$SHELL -i"
+	$(MOCK) --resultdir=results/ --no-clean --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --enable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "cd /builddir/build/BUILD && exec \$$SHELL -i"
 
 debugshowoptions:
 	$(MOCK) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --debug-config-expanded
 
 updateit:
-	$(MOCK) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --update
-	$(MOCK) --result=results/ --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "exec /opt/mybin/frpm4"
+	$(MOCK) --resultdir=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --update
+	$(MOCK) --resultdir=results/ --no-clean --no-cleanup-after --shell --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --unpriv "exec /opt/mybin/frpm4"
 
 installit:
-	$(MOCK) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --install $(RUN_ARGS)
+	$(MOCK) --resultdir=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) --install $(RUN_ARGS)
 
 removeit:
-	$(MOCK) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) remove $(RUN_ARGS)
+	$(MOCK) --resultdir=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME) --disable-plugin=tmpfs --disable-plugin=ccache --config-opts=basedir=/aot/var/lib/mock --root=$(MOCK_CONFIG_VAL) remove $(RUN_ARGS)
 
 #help autospecnostate: Runs autospec, but cleans up mock chroots
 #help and disables interactive mode.
@@ -770,7 +772,7 @@ install-t:
 #help install-mock: Install locally built RPMs to the mock rootcache
 #help filesystem. This command is usually used with "make shell".
 install-mock: repoadd
-	$(MOCK) --result=results/ --no-cleanup-after --uniqueext=$(PKG_NAME) -i $(filter-out ${DEBUGINFO_RPM},${RPMS})
+	$(MOCK) --resultdir=results/ --no-clean --no-cleanup-after --uniqueext=$(PKG_NAME) -i $(filter-out ${DEBUGINFO_RPM},${RPMS})
 
 .PHONY: link-new-rpms-here
 link-new-rpms-here:
@@ -810,10 +812,10 @@ drop-abandoned: $(SPECFILE)
 
 #help cloc: Count lines of code with the `cloc` tool on the full sources of package
 cloc: $(SRPMFILE)
-	@$(MOCK) -r $(TOPLVL)/repo/clear.cfg $(SRPMFILE) --result=results/ --no-cleanup-after
-	@$(MOCK) --chroot --copyin /usr/bin/cloc /usr/bin/cloc --result=results/ --no-cleanup-after
-	@$(MOCK) --result=results/ --no-cleanup-after --chroot '/usr/bin/cloc /builddir > /tmp/cloc.txt'
-	@$(MOCK) --copyout /tmp/cloc.txt results/ --result=results/
+	@$(MOCK) -r $(TOPLVL)/repo/clear.cfg $(SRPMFILE) --resultdir=results/ --no-clean --no-cleanup-after
+	@$(MOCK) --chroot --copyin /usr/bin/cloc /usr/bin/cloc --resultdir=results/ --no-clean --no-cleanup-after
+	@$(MOCK) --resultdir=results/--no-clean  --no-cleanup-after --chroot '/usr/bin/cloc /builddir > /tmp/cloc.txt'
+	@$(MOCK) --copyout /tmp/cloc.txt results/ --resultdir=results/
 	@$(MOCK) --clean --scrub=chroot --uniqueext=$(PKG_NAME)
 	cat results/cloc.txt
 
